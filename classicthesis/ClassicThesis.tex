@@ -60,19 +60,21 @@
 %\setbibpreamble{}
 \pagenumbering{roman}
 \pagestyle{plain}
+
 %********************************************************************
 % Frontmatter
 %*******************************************************
-\include{FrontBackmatter/DirtyTitlepage}
+%\include{FrontBackmatter/DirtyTitlepage}
 \include{FrontBackmatter/Titlepage}
 \include{FrontBackmatter/Titleback}
 \cleardoublepage\include{FrontBackmatter/Dedication}
 %\cleardoublepage\include{FrontBackmatter/Foreword}
 \cleardoublepage\include{FrontBackmatter/Abstract}
-\cleardoublepage\include{FrontBackmatter/Publications}
+%\cleardoublepage\include{FrontBackmatter/Publications}
 \cleardoublepage\include{FrontBackmatter/Acknowledgments}
 \pagestyle{scrheadings}
 \cleardoublepage\include{FrontBackmatter/Contents}
+
 %********************************************************************
 % Mainmatter
 %*******************************************************
@@ -80,34 +82,47 @@
 %\setcounter{page}{90}
 % use \cleardoublepage here to avoid problems with pdfbookmark
 \cleardoublepage
-\part{Some Kind of Manual}
-\include{Chapters/Chapter01}
+%\ctparttext{You can put some informational part preamble text here. 
+%Illo principalmente su nos. Non message \emph{occidental} angloromanic
+%da. Debitas effortio simplificate sia se, auxiliar summarios da que,
+%se avantiate publicationes via. Pan in terra summarios, capital
+%interlingua se que. Al via multo esser specimen, campo responder que
+%da. Le usate medical addresses pro, europa origine sanctificate nos se.}
+
+\part{Background}
+\include{Chapters/Parallelism}
+\include{Chapters/MSE}
+\include{Chapters/ISL}
+\include{Chapters/LLVM}
+\include{Chapters/Polly}
+
+\part{Implementation}
+\include{Chapters/HeapAlloc}
+\include{Chapters/FIE}
+\include{Chapters/MSE_Imp}
+
 \cleardoublepage
-\ctparttext{You can put some informational part preamble text here. 
-Illo principalmente su nos. Non message \emph{occidental} angloromanic
-da. Debitas effortio simplificate sia se, auxiliar summarios da que,
-se avantiate publicationes via. Pan in terra summarios, capital
-interlingua se que. Al via multo esser specimen, campo responder que
-da. Le usate medical addresses pro, europa origine sanctificate nos se.}
-\part{The Showcase}
-\include{Chapters/Chapter02}
-%\addtocontents{toc}{\protect\clearpage} % <--- just debug stuff, ignore
-\include{Chapters/Chapter03}
-%\include{multiToC} % <--- just debug stuff, ignore for your documents
+\part{Evaluation}
+
+\cleardoublepage
+\part{Perspectives}
+
 % ********************************************************************
 % Backmatter
 %*******************************************************
-\appendix
-%\renewcommand{\thechapter}{\alph{chapter}}
-\cleardoublepage
-\part{Appendix}
-\include{Chapters/Chapter0A}
+%\appendix
+%%\renewcommand{\thechapter}{\alph{chapter}}
+%\cleardoublepage
+%\part{Appendix}
+%\include{Chapters/Chapter0A}
+
+
 %********************************************************************
 % Other Stuff in the Back
 %*******************************************************
 \cleardoublepage\include{FrontBackmatter/Bibliography}
-\cleardoublepage\include{FrontBackmatter/Declaration}
-\cleardoublepage\include{FrontBackmatter/Colophon}
+%\cleardoublepage\include{FrontBackmatter/Declaration}
+%\cleardoublepage\include{FrontBackmatter/Colophon}
 % ********************************************************************
 % Game Over: Restore, Restart, or Quit?
 %*******************************************************
