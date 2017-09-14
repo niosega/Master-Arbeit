@@ -9,9 +9,72 @@ There are multiple data structure inside ISL. Here is a quick overview of concep
 \section{Identifier}
 
 \section{Set}
+A set in ISL is represented as follow :
+\[
+\{S[i_0,...,i_n]:c_0,...,c_n\}
+\]
+Where $i_k$ is an input variable and $c_k$ is a constraint.
+
+For example, the set of all instances of the statement S of the following code source is $\{S[i,j]:i=j,0<=i<=N,0<=j<=N\}$.
+\begin{lstlisting}[frame=single]
+for (int i = 0; i < N; i++)
+  for (int j = 0; j < N; j++)
+    if (i == j)
+S:    A[i][j+1] = i*j;
+\end{lstlisting}
 
 \section{Map}
+A map in ISL represents a relation between two sets. It is represented as follow :
+\[
+\{S[i_0,...,i_n] \rightarrow T[o_0,...,o_n]:c_0,...,c_n\}
+\]
+
+Where $i_k$ is an input variable (also called input dimension), $o_k$ is an output variable (also called output dimension) and $c_k$ is a constraint.
+
+For example, to model the memory access inside the statement S of the preeceding example, the corresponding map is :
+\[
+\{S[i,j] \rightarrow A[i,j+1]:i=j,0<=i<=N,0<=j<=N\}
+\]
+This map means that in the statement S, there is a memory access to the array A at the indices [i, j+1].
+
+\textbf{BE CAREFUL :} there are implicit constraints in this map. An unsimplified version of this map is :
+
+\[
+\{S[i_0,i_1] \rightarrow A[o_0,o_1]:i_0=i_1,i_0=o_0,i1=o_1−1\}
+\]
+
+The input part of the map is called the domain whereas the output part is called the range. 
+
+For example, the domain and the range of the previous map are :
+\[
+domain(\{S[i,j]→A[i,j+1]:i=j\})=\{S[i,j]:i=j\} 
+\]
+\[
+range(\{S[i,j]→A[i,j+1]:i=j\})=\{A[i,j+1]:i=j\}
+\]
 
 \section{Union Map and Union Set}
+On a coarse-grain, an union map and an union set are just an union of map and of set.
 
 \section{Nested Map}
+There is a specific type map called nested map. The structure is following : 
+\[
+\{[S[i_0,...,i_n] \rightarrow T[j_0,...,j_m]] \rightarrow [U[k_0,...,k_r] \rightarrow V[l_0,...,l_t]]:c_0,...,c_a\}
+\]
+
+With this kind of data structure, we can represent data dependencies. Let take an example.
+
+\begin{lstlisting}[frame=single]
+for (int i = 0; i < N; i++) {
+   for (int j = 0; j < N; j++) {
+S:   B[i][j] = i*j;;
+   }
+T: A[i] = B[0][i];
+}
+\end{lstlisting}
+
+There is a RAW dependency for the array B because we read index i of B in statement T after that the statement S has written to index j of B. The dependences map looks like :
+\[
+\{[T[i] \rightarrow B[0,i]] \rightarrow [S[i,j] \rightarrow B[i,i]]:0<=i<=N,0<=j<=N\}
+\]
+
