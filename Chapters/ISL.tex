@@ -40,17 +40,17 @@ This map means that in the statement S, there is a memory access to the array A 
 \textbf{BE CAREFUL :} there are implicit constraints in this map. An unsimplified version of this map is :
 
 \[
-\{S[i_0,i_1] \rightarrow A[o_0,o_1]:i_0=i_1,i_0=o_0,i1=o_1−1\}
+\{S[i_0,i_1] \rightarrow A[o_0,o_1]:i_0=i_1,i_0=o_0,i_1=o_1-1\}
 \]
 
 The input part of the map is called the domain whereas the output part is called the range. 
 
 For example, the domain and the range of the previous map are :
 \[
-domain(\{S[i,j]→A[i,j+1]:i=j\})=\{S[i,j]:i=j\} 
+domain(\{S[i,j] \rightarrow A[i,j+1]:i=j\})=\{S[i,j]:i=j\} 
 \]
 \[
-range(\{S[i,j]→A[i,j+1]:i=j\})=\{A[i,j+1]:i=j\}
+range(\{S[i,j] \rightarrow A[i,j+1]:i=j\})=\{A[i,j+1]:i=j\}
 \]
 
 \section{Union Map and Union Set}
