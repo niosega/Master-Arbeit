@@ -1,3 +1,20 @@
 %************************************************
 \chapter{Polly}\label{ch:Polly}
 %************************************************
+
+\section{Architecture}
+Polly is a loop and data-locality optimizer for LLVM. The optimisations are made using a mathematical model called the polyhedral model. A key aspect of the model is the ability to reason about the memory access behavior in a very fine-granular way. This enables us to express very fine-granular way in a mathematical domain, where we deal with polyhedra instead of LLVM instructions. After modeling, transformations (tilling, loop fusion, loop unrolling …) can be applied on the model to improve data-locality and/or parallelization.
+
+To do this, polly acts in three steps. First, it detects interesting code and translates it into a polyhedral representation. Then, it does some analysis and transformations passes that operate on the LLVM-IR. Finally, it generates code for the desired target. These three steps are called front-end, middle part and back-end passes.
+
+\todo{Ajouter la figure 9 de la these de Tobias}
+
+In the front-end passes, Polly detects which part of the code will be optimised. Those part are called Static Control Parts (SCoPs). Then Polly transforms those SCoPs into a polyhedral representation. 
+
+The middle part is the place where analysis (dependencies analysis) and transformations (Maximal static expansion for instance) are made. It is also possible to export and import representations to perform manual optimisations.
+
+Finally, in the back-end, the optimised polyhedral representation is transform back to LLVM-IR. It is possible to detect code that will take advantages of a thread level parallelism (OpenMP) and that will behave better with SIMD instructions. It is also possible to generate code for GPU. 
+
+There are two ways to enable polly. It is possible to enable Polly directly from clang by adding the option \emph{-polly} to the clang command line. Multiple passes can be enable by just calling them from the command line. The resulting executable will then be an executable optimised with Polly. It is also possible to do it by hand with the LLVM tools seen in the preeceeding chapter.
+
+\section{Profitable code and SCop}
