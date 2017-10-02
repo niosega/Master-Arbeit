@@ -18,3 +18,54 @@ Finally, in the back-end, the optimised polyhedral representation is transform b
 There are two ways to enable polly. It is possible to enable Polly directly from clang by adding the option \emph{-polly} to the clang command line. Multiple passes can be enable by just calling them from the command line. The resulting executable will then be an executable optimised with Polly. It is also possible to do it by hand with the LLVM tools seen in the preeceeding chapter.
 
 \section{Profitable code and SCop}
+Polly operates on a low level representation of the code called LLVM-IR. This language has been designed to perform low-level optimisations. To focus on important high-level optimisation problems, it is important to have a more abstract representation. In this section, we will discuss about the polyhedral representation used by Polly and a definition of what kind of code can be translated to this representation.
+
+Polyhedral optimisers work on Static Control Parts (SCoP) of a function. A Static Control Parts is a part of code in which all control flow and memory accesses are known at compile time. This means that it is possible to run precise and detailled analysis during compilation. Some optimisers also work with non-statically known control flow, some use a Just In Time (JIT) mechanism, but Polly only focus on statically known control flow. \todo{Faire un lien vers polli jit}
+
+\begin{definition}{}
+A SCoP is a part of a code in which :
+The control flow contains only for-loops and if-conditions and :
+\begin{itemize}
+\item Each loop has only one integer induction variable that is incremented between a lower and an upper bound, by a constant stride.
+\item Lower and upper bounds are affine expressions in parameters and surrounding loop induction variables. A parameter is a integer variable that is keep constant throughout the SCoP.
+\item If-conditions compare two affine expressions.
+\item Statements inside for loops or if body are valid if and only if they are assignements that store an expression to an array element.
+\item The access function consists of a formula with induction variables, parameters.
+\item The expression stored can be a formula or a function call with inductions variables, parameters or array elements.
+\end{itemize}\end{definition}
+
+Polly, by default, does not optimise all SCoPs. It select profitable one with a very simple algorithm. A SCoP is considered profitable if :
+\todo{voir avec luc pour les criteres }
+\begin{itemize}
+\item d
+\end{itemize}
+It is possible to force Polly to optimise every SCoP with the option $-polly-process-unprofitable$. This approach is very simple and not efficient. During my thesis, one of my colleague has worked on a different approach to select profitable SCoP based on Profiled Guided Optimisation (PGO).\todo{Reference vers Luc}
+
+After Scop transformations, Polly create a divergence at the place where the SCoP was. One branch is the old code, one other is the optimised version. Some tests, at runtime, are performed to choose the right code to be optimised. For instance, Polly is not able to handle pointers that overlapsed, but the detection can only be made at run-time.
+\todo{Ajouter beau dessin}
+
+\section{Polyhedral representation inside Polly}
+Polly uses a polyhedral representation based on ISL, the library described in chapter\ref{ch:ISL}.
+
+A SCoP is described as a \emph{context} and a \emph{list of statements}. A \emph{context} is a set that describes constraints on parameters : positiveness, interval constraints, etc.
+
+A \emph{statement} is a \emph{name}, a \emph{domain}, a \emph{schedule} and a list of \emph{accesses}. It represents the smallest unit that can be scheduled independantly.
+
+A \emph{domain} is a named integer set that described the loops iterations. The name of the domain is the name of the statement it appears in. A domain has as many parameter dimensions as number of parameters of the SCoP. For each loop in the loop nest, the statement has one set dimension.
+
+A \emph{schedule} is a map that assigns to each iteration vector, a point in time. This map is used to describe execution order of the statements instances.
+
+A \emph{access} is a \emph{kind} and a \emph{relation}. The \emph{kind} can be $write$, $read$ or $MayWrite$. $MayWrite$ occurs when the write access can be executed or not, depending on execution : a write access inside a if-condition is represented as a $MayWrite$. A \emph{relation} is a map that maps statement domain to a memory location. 
+
+To have a more clear view of the polyhedral representation, here is an example :
+\todo{faire un exemple}
+
+Polly also uses a ISL-based representation for dependences. An example can be found in chapter\ref{ch:ISL}.
+
+\section{JSON Importer/Exporter}
+Polly allows the user to export the SCoP representation into a JSON file. At the beginning, Polly was not able to perform optimisation. The aim of the JSON Importer/Exporter was to allow users to use their own polyhedral optimisers. 
+\todo{Example of json export}
+
+As first step in open source software development and to get familiar with Polly/LLVM development process, I fixed an open bug in Polly. From a JSON file it is possible to alter the existing modelling of a SCoP and even trigger code generation for new array accesses. This interface is mainly used for debugging and testing and therefore lacked a lot of consistency checks. This often triggered errors in the remaining part of the Polly optimization pipeline. My first step was, therefore, to implement those missing checks.
+
+The resulting commit can be found here at \href{https://reviews.llvm.org/D32739}{this link}.
