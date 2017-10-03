@@ -1,6 +1,32 @@
 %************************************************
 \chapter{Parallelism}\label{ch:Parallelism}
 %************************************************
+Nowadays, there are more and more cores and computational units in computers and clusters. The problem is that extracting parallelism from a source code is not that easy, so the automatic parallelisation of nowadays languages is a challenge. For example, decide automaticaly to run a code on a GPU or a CPU requires an in-depth knowledge of the code and of the architecture. We will see in this chapter what is parallelism and describe the current architectures.
 
+\section{Definitions}
+Parallelism is a kind of computation in which multiples computations are carried out in the same time. The main idea of parallelism is to extract from a big problem multiples smalls problems that can be solved in parallel. 
 
+There are several types of parallelism :
+\begin{itemize}
+\item Bit-Level parallelism : BLP is based on the size of the processor word size. For instance, to compute an addition of two 32 bits integers, a 16 bits processors will need two cycles whereas a 32 bits processor will only need one.
+\item Instruction-Level parallelism : ILP works, as its name suggests, at Instruction level. This means that the dependencies of the code will be analyzed to be able to execute multiples instructions in parallel. \todo{Faire example}. There are multiples optimisations in modern compilers that act at Instruction-Level : Register renaming, Static Expansion etc.
+\item Data parallelism : DP is the art of splitting data to multiples computational units, let them compute intermediate results and reconstruct the final results from the intermediate results. \todo{example sum tableau}
+\item Task parallelism : TP is the art of distributing differents tasks (handle graphical interface, compute price of flight ticket) on multiples computational units. For instance, if you read this document on your computer, there are probably one thread for your favorite pdf reader and one for your system. 
+\end{itemize}
 
+Parallelism can be found at two stages :
+\begin{itemize}
+\item Software : Even if the most common languages were created for non-parallel architectures, more and more library or compilers options are developped to enhance parallelism during compilation/execution. Some implicitly parallel languages exist (SequenceL \todo{lien}) but are not widely used.
+\item Hardware : Some architecture are better for few kind of computation. For example, GPU behave well with array operations. The architecture (memory types and placement, type of nodes and computational units) allows better performance and parallelism  for only a restrict number of cases. Parallelism is the art of building a system that fit to our needs.
+\end{itemize}
+
+\section{CPU}
+
+\section{GPU}
+
+\section{Others architectures}
+\subsection{ManyCore}
+\subsection{ASICs}
+\subsection{FPGA}
+
+\section{Dependencies analysis}
