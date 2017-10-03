@@ -20,11 +20,28 @@ Parallelism can be found at two stages :
 \item Hardware : Some architecture are better for few kind of computation. For example, GPU behave well with array operations. The architecture (memory types and placement, type of nodes and computational units) allows better performance and parallelism  for only a restrict number of cases. Parallelism is the art of building a system that fit to our needs.
 \end{itemize}
 
-\section{CPU}
+\section{Architectures}
+In this section, we will describe the main architectures that are available to execute programs. The principle, advantages and disavantadges of each will be presented.
 
-\section{GPU}
+\subsection{CPU}
+A Central Processing Unit (CPU) is the part of computers that do the computations. This is the most common type of computational units, everyone has one in its machine. The market is flooded  by Intel\todo{lien} and AMD\todo{lien}. A processor can have one or multiple cores (nowadays 2 to 8), each core is an independant computational unit but the memory is shared between all of them. 
+\todo{dessin cpu}.
 
-\section{Others architectures}
+A CPU executes a flow of instructions according to a fixed pipeline. The most simple pipeline is Instruction Fetch, Instruction Decode, Execute, Write Back.
+\begin{itemize}
+\item Fetch : The instruction is loaded from the main memory.
+\item Decode : The instruction is decoded inside the processor, ie the processor understands what it has to compute.
+\item Execute : The computation is done.
+\item Write Back : The result is written back in memory.
+\end{itemize}
+
+\todo{dessin pipeline}
+
+To enhance the performance of a program, some optimisations can be done at Pipeline-Level. For example, speculative execution allows the processor to load instruction before the end of others running instructions. \todo{faire example de boucle qui charge la dereniere iteration alors qu'il fallait pas}
+
+The advantage of a CPU is that it is possible to design instructions for every specific needs : there are some instructions only used for cryptography in our modern processor. The disavantadge is that the circuit become bigger and bigger and so slower and slower. A CPU follows a single instruction single data  schema : this means that one instruction operate on one data. Performance on vector operations are bad that is why modern processors have Single Instruction Multiple Datas (SIMD) instructions that can perform the same operations on multiple data (doing +2 on all cells of an array for example).
+
+\subsection{GPU}
 \subsection{ManyCore}
 \subsection{ASICs}
 \subsection{FPGA}
