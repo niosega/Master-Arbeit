@@ -42,8 +42,12 @@ To enhance the performance of a program, some optimisations can be done at Pipel
 The advantage of a CPU is that it is possible to design instructions for every specific needs : there are some instructions only used for cryptography in our modern processor. The disavantadge is that the circuit become bigger and bigger and so slower and slower. A CPU follows a single instruction single data  schema : this means that one instruction operate on one data. Performance on vector operations are bad that is why modern processors have Single Instruction Multiple Datas (SIMD) instructions that can perform the same operations on multiple data (doing +2 on all cells of an array for example).
 
 \subsection{GPU}
-\subsection{ManyCore}
-\subsection{ASICs}
-\subsection{FPGA}
+
+\subsection{Others architectures}
+ManyCore are processors that contains multiples (10 to 1000) simpler and independant cores. They can be seen as a small cluster inside a chip. This means that programming models like OpenMP or MPI can be used to compiled a code to a ManyCore target. Sunway TaihuLight, a chinese supercomputer is build from 40960 homemade manycores.
+
+Application-Specific Integrated Circuit (ASIC) are processors that are designed for a specific use cases and are not reprogrammable. For instance, if a system need an efficient circuit that compute Fourrier transform, this can be implemented in a ASIC. The advantage is that, due to the fact that the ASIC is designed for a specific use, the performance will be better than with a CPU.
+
+Field-Programmable Gate Array (FPGA) are between ASIC and CPU. FPGA are circuit that can be reconfigured multiples times but one configured can only do one things. For instance, some prototypes chips have a CPU and a FPGA so that if the compiler detects a piece of code that are run multiple time, it will configure the FPGA to do this operation and let the CPU ask the FPGA each time it needs the value.  
 
 \section{Dependencies analysis}
