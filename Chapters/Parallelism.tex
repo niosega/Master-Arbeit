@@ -51,3 +51,62 @@ Application-Specific Integrated Circuit (ASIC) are processors that are designed 
 Field-Programmable Gate Array (FPGA) are between ASIC and CPU. FPGA are circuit that can be reconfigured multiples times but one configured can only do one things. For instance, some prototypes chips have a CPU and a FPGA so that if the compiler detects a piece of code that are run multiple time, it will configure the FPGA to do this operation and let the CPU ask the FPGA each time it needs the value.  
 
 \section{Dependencies analysis}
+Dependencies analysis is a way to get constraints between statements in a program. There are two types of dependencies :
+\begin{itemize}
+\item \emph{Control dependencies} happen when execution of a statement depends on the result of a previous instruction. 
+\begin{lstlisting}
+S1: if (N<10)
+S2:     A[i] = 0;
+\end{lstlisting}
+
+For this example, we say that S2 is control-dependent on S1.
+
+
+\item \emph{Data dependencies} happen when two different statement access the same ressource.
+\end{itemize}
+
+Data dependencies can appears in four different manner :
+\begin{itemize}
+\item \emph{Flow Dependences}, or \emph{Read After Write} happen when an instruction S2 reads the data modified by an instruction S1 that preceeds S2. 
+\begin{lstlisting}
+S1: x = 10
+S2: print(x)
+\end{lstlisting}
+In this example, it is impossible to reorder or parallelize the execution.
+
+\item \emph{Antidependencies}, or \emph{Write After Read} happen when an instruction S2 writes the data read by an instruction S1 that preceeds S2.
+\begin{lstlisting}
+S1: print(x)
+S2: x = 10
+\end{lstlisting}
+In this example, it is impossible to reorder or parallelize the execution.
+
+\item \emph{Output Dependences}, or \emph{write After Write} happen when an instruction S2 writes the data modified by an instruction S1 that preceeds S2.
+\begin{lstlisting}
+S1: x = 10
+S2: x = 20
+\end{lstlisting}
+In this example, it is impossible to reorder or parallelize the execution.
+
+\item \emph{Input Dependences}, or \emph{Read After Read} happen when an instruction S2 reads the data read by an instruction S1 that preceeds S2. 
+\begin{lstlisting}
+S1: print(x)
+S2: y = x
+\end{lstlisting}
+In this example, it is possible to reorder or parallelize the execution.
+\end{itemize}
+
+\emph{WAR} and \emph{WAW} are called \emph{name dependencies} and can be remove by variables renaming or static expansion. Let take an example :
+\begin{lstlisting}
+S1: B = 2
+S2: A = B + 2
+S3: B = 3
+\end{lstlisting}
+
+There are a RAW dependency between S2 and S1, a WAR between S3 and S2 and a WAW between S3 and S1. It is possible to remove WAR and WAW by renaming variables :
+\begin{lstlisting}
+S1: B2 = 2
+S2: A = B2 + 2
+S3: B = 3
+\end{lstlisting}
+Now, we only have one RAW dependency between S2 and S1 and we will never be able to remove this one because this dependency represents the natural flow of the program.
