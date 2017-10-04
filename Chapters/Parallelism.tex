@@ -9,14 +9,28 @@ Parallelism is a kind of computation in which multiples computations are carried
 There are several types of parallelism :
 \begin{itemize}
 \item Bit-Level parallelism : BLP is based on the size of the processor word size. For instance, to compute an addition of two 32 bits integers, a 16 bits processors will need two cycles whereas a 32 bits processor will only need one.
-\item Instruction-Level parallelism : ILP works, as its name suggests, at Instruction level. This means that the dependencies of the code will be analyzed to be able to execute multiples instructions in parallel. \todo{Faire example}. There are multiples optimisations in modern compilers that act at Instruction-Level : Register renaming, Static Expansion etc.
-\item Data parallelism : DP is the art of splitting data to multiples computational units, let them compute intermediate results and reconstruct the final results from the intermediate results. \todo{example sum tableau}
+\item Instruction-Level parallelism : ILP works, as its name suggests, at Instruction level. This means that the dependencies of the code will be analyzed to be able to execute multiples instructions in parallel. Let take an example :
+\begin{lstlisting}
+S1: a = 2
+S2: b = a + 3
+S3: c = a*a
+\end{lstlisting}
+S2 and S3 depends on S1 but S2 and S3 are independant. So it is possible execute simultaneously S2 and S3.
+
+There are multiples optimisations in modern compilers that act at Instruction-Level : Register renaming, Static Expansion etc.
+\item Data parallelism : DP is the art of splitting data to multiples computational units, let them compute intermediate results and reconstruct the final results from the intermediate results. Figure~\ref{fig:Data_Parallelism} shows an example of data parallelism to compute a function on an array on two nodes.
+\begin{figure}
+\centering
+\includegraphics[width=6cm]{gfx/Parallelism/Data_Parallelism.png}
+\caption{Splitting of an array to 2 nodes}
+\label{fig:Data_Parallelism}
+\end{figure}
 \item Task parallelism : TP is the art of distributing differents tasks (handle graphical interface, compute price of flight ticket) on multiples computational units. For instance, if you read this document on your computer, there are probably one thread for your favorite pdf reader and one for your system. 
 \end{itemize}
 
 Parallelism can be found at two stages :
 \begin{itemize}
-\item Software : Even if the most common languages were created for non-parallel architectures, more and more library or compilers options are developped to enhance parallelism during compilation/execution. Some implicitly parallel languages exist (SequenceL \todo{lien}) but are not widely used.
+\item Software : Even if the most common languages were created for non-parallel architectures, more and more library or compilers options are developped to enhance parallelism during compilation/execution. Some implicitly parallel languages exist (\href{https://texasmulticore.com/technology/sequencel-at-a-glance/}{SequenceL} for instance) but are not widely used.
 \item Hardware : Some architecture are better for few kind of computation. For example, GPU behave well with array operations. The architecture (memory types and placement, type of nodes and computational units) allows better performance and parallelism  for only a restrict number of cases. Parallelism is the art of building a system that fit to our needs.
 \end{itemize}
 
@@ -24,8 +38,13 @@ Parallelism can be found at two stages :
 In this section, we will describe the main architectures that are available to execute programs. The principle, advantages and disavantadges of each will be presented.
 
 \subsection{CPU}
-A Central Processing Unit (CPU) is the part of computers that do the computations. This is the most common type of computational units, everyone has one in its machine. The market is flooded  by Intel\todo{lien} and AMD\todo{lien}. A processor can have one or multiple cores (nowadays 2 to 8), each core is an independant computational unit but the memory is shared between all of them. 
-\todo{dessin cpu}.
+A Central Processing Unit (CPU) is the part of computers that do the computations. This is the most common type of computational units, everyone has one in its machine. The market is flooded  by \href{www.intel.com}{Intel} and \href{www.amd.com}{AMD}. A processor can have one or multiple cores (nowadays 2 to 8), each core is an independant computational unit but the memory is shared between all of them. Figure~\ref{fig:VonNeumann} shows a well known drawing called Von Neumann architecture. On the left, the processor with 4 cores. On the right, the memory. These two components interact together in both direction (CPU to Mem, Mem to CPU).
+\begin{figure}
+\centering
+\includegraphics[width=6cm]{gfx/Parallelism/VonNeumann.png}
+\caption{Von Neumann architecture}
+\label{fig:VonNeumann}
+\end{figure}
 
 A CPU executes a flow of instructions according to a fixed pipeline. The most simple pipeline is Instruction Fetch, Instruction Decode, Execute, Write Back.
 \begin{itemize}
