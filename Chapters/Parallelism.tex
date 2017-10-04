@@ -10,7 +10,7 @@ There are several types of parallelism :
 \begin{itemize}
 \item Bit-Level parallelism : BLP is based on the size of the processor word size. For instance, to compute an addition of two 32 bits integers, a 16 bits processors will need two cycles whereas a 32 bits processor will only need one.
 \item Instruction-Level parallelism : ILP works, as its name suggests, at Instruction level. This means that the dependencies of the code will be analyzed to be able to execute multiples instructions in parallel. Let take an example :
-\begin{lstlisting}
+\begin{lstlisting}[frame=single]
 S1: a = 2
 S2: b = a + 3
 S3: c = a*a
@@ -68,7 +68,7 @@ The advantage of a CPU is that it is possible to design instructions for every s
 \subsection{GPU}
 A \emph{Graphics Processing Unit}, or \emph{GPU}, is a circuit that has been designed to efficiently manipulate images. Every devices that have a screen have a GPU. A GPU contains a lot of simple core that can operates in parallel. At the begining, GPU were designed to rendered images, especially for video games. Today, they are used in others fields like high performance computing. Some GPU does not even have video output : such cards are called accelerators.
 
-At the beginning of computation on GPU, the programers had to convert their problems into a shader version because GPU are only able to make computation on shaders. \todo{lien vers ce qu'est un shader}. Nowadays, some high level framework has been developped to abstract all the shader mechanisms. The most common one is \href{https://developer.nvidia.com/cuda-zone}{\emph{CUDA}} developped by NVIDIA, for NVIDIA cards. The main idea of CUDA is the separation between the Host (the CPU) and the Device (the GPU). The CPU asks to the Device to run a kernel on an array. Then, datas are transfered to the GPU. The GPU operates on the data and finally the results are send back to the CPU. All the memory transferts are very costly but the acceleration provided by the GPU makes the whole process faster. 
+At the beginning of computation on GPU, the programers had to convert their problems into a shader version because GPU are only able to make computation on shaders. Nowadays, some high level framework has been developped to abstract all the shader mechanisms. The most common one is \href{https://developer.nvidia.com/cuda-zone}{\emph{CUDA}} developped by NVIDIA, for NVIDIA cards. The main idea of CUDA is the separation between the Host (the CPU) and the Device (the GPU). The CPU asks to the Device to run a kernel on an array. Then, datas are transfered to the GPU. The GPU operates on the data and finally the results are send back to the CPU. All the memory transferts are very costly but the acceleration provided by the GPU makes the whole process faster. 
 
 To sum up the advantage of GPU, they can operate way more faster than CPU on array computations. But for that, code should have less dependencies as possible.
 
@@ -83,7 +83,7 @@ Field-Programmable Gate Array (FPGA) are between ASIC and CPU. FPGA are circuit 
 Dependencies analysis is a way to get constraints between statements in a program. There are two types of dependencies :
 \begin{itemize}
 \item \emph{Control dependencies} happen when execution of a statement depends on the result of a previous instruction. 
-\begin{lstlisting}
+\begin{lstlisting}[frame=single]
 S1: if (N<10)
 S2:     A[i] = 0;
 \end{lstlisting}
@@ -97,28 +97,28 @@ For this example, we say that S2 is control-dependent on S1.
 Data dependencies can appears in four different manner :
 \begin{itemize}
 \item \emph{Flow Dependences}, or \emph{Read After Write} happen when an instruction S2 reads the data modified by an instruction S1 that preceeds S2. 
-\begin{lstlisting}
+\begin{lstlisting}[frame=single]
 S1: x = 10
 S2: print(x)
 \end{lstlisting}
 In this example, it is impossible to reorder or parallelize the execution.
 
 \item \emph{Antidependencies}, or \emph{Write After Read} happen when an instruction S2 writes the data read by an instruction S1 that preceeds S2.
-\begin{lstlisting}
+\begin{lstlisting}[frame=single]
 S1: print(x)
 S2: x = 10
 \end{lstlisting}
 In this example, it is impossible to reorder or parallelize the execution.
 
 \item \emph{Output Dependences}, or \emph{write After Write} happen when an instruction S2 writes the data modified by an instruction S1 that preceeds S2.
-\begin{lstlisting}
+\begin{lstlisting}[frame=single]
 S1: x = 10
 S2: x = 20
 \end{lstlisting}
 In this example, it is impossible to reorder or parallelize the execution.
 
 \item \emph{Input Dependences}, or \emph{Read After Read} happen when an instruction S2 reads the data read by an instruction S1 that preceeds S2. 
-\begin{lstlisting}
+\begin{lstlisting}[frame=single]
 S1: print(x)
 S2: y = x
 \end{lstlisting}
@@ -126,14 +126,14 @@ In this example, it is possible to reorder or parallelize the execution.
 \end{itemize}
 
 \emph{WAR} and \emph{WAW} are called \emph{name dependencies} and can be remove by variables renaming or static expansion. Let take an example :
-\begin{lstlisting}
+\begin{lstlisting}[frame=single]
 S1: B = 2
 S2: A = B + 2
 S3: B = 3
 \end{lstlisting}
 
 There are a RAW dependency between S2 and S1, a WAR between S3 and S2 and a WAW between S3 and S1. It is possible to remove WAR and WAW by renaming variables :
-\begin{lstlisting}
+\begin{lstlisting}[frame=single]
 S1: B2 = 2
 S2: A = B2 + 2
 S3: B = 3

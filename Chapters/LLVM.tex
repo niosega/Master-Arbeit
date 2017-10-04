@@ -7,9 +7,14 @@ The Low Level Virtual Machine (LLVM)is a compiler framework developped by Lattne
 \section{LLVM Architecture and Pipeline}
 LLVM is not a single-block application but a set of libraries. Each library do a single step in the LLVM pipeline. It is possible to call only one library with the command line or let the compiler work by itself. In this section, the LLVM Pipeline will be described. At each stage, the corresponding tool will be mentionned.
 
-The LLVM pipeline can be schematize as follows :
+The LLVM pipeline, show in a simplified way in Figure~\ref{fig:Architecture}, can be schematize as follows :
 
-\todo{Faire un schema de l'archi de llvm}
+\begin{figure}
+\centering
+\includegraphics[scale=0.25]{gfx/LLVM/Architecture.png}
+\caption{Simplified LLVM Architecture}
+\label{fig:Architecture}
+\end{figure}
 
 On the left hand side, the input source file are processed by the front-ends corresponding to the language of the source code. The front-end provides to the rest of the pipeline a ll file, which is a file containing LLVM-IR. The tool use for the front end differ according to source code. For example, in case of C/C++, the tool can be clang.
 
