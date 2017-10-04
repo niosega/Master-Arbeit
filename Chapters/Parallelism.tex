@@ -42,6 +42,12 @@ To enhance the performance of a program, some optimisations can be done at Pipel
 The advantage of a CPU is that it is possible to design instructions for every specific needs : there are some instructions only used for cryptography in our modern processor. The disavantadge is that the circuit become bigger and bigger and so slower and slower. A CPU follows a single instruction single data  schema : this means that one instruction operate on one data. Performance on vector operations are bad that is why modern processors have Single Instruction Multiple Datas (SIMD) instructions that can perform the same operations on multiple data (doing +2 on all cells of an array for example).
 
 \subsection{GPU}
+A \emph{Graphics Processing Unit}, or \emph{GPU}, is a circuit that has been designed to efficiently manipulate images. Every devices that have a screen have a GPU. A GPU contains a lot of simple core that can operates in parallel. At the begining, GPU were designed to rendered images, especially for video games. Today, they are used in others fields like high performance computing. Some GPU does not even have video output : such cards are called accelerators.
+
+At the beginning of computation on GPU, the programers had to convert their problems into a shader version because GPU are only able to make computation on shaders. \todo{lien vers ce qu'est un shader}. Nowadays, some high level framework has been developped to abstract all the shader mechanisms. The most common one is \emph{CUDA} \todo{lien vers cuda} developped by NVIDIA, for NVIDIA cards. The main idea of CUDA is the separation between the Host (the CPU) and the Device (the GPU). The CPU asks to the Device to run a kernel on an array. Then, datas are transfered to the GPU. The GPU operates on the data and finally the results are send back to the CPU. All the memory transferts are very costly but the acceleration provided by the GPU makes the whole process faster. 
+\todo{example kernel}
+
+To sum up the advantage of GPU, they can operate way more faster than CPU on array computations. But for that, code should have less dependencies as possible.
 
 \subsection{Others architectures}
 ManyCore are processors that contains multiples (10 to 1000) simpler and independant cores. They can be seen as a small cluster inside a chip. This means that programming models like OpenMP or MPI can be used to compiled a code to a ManyCore target. Sunway TaihuLight, a chinese supercomputer is build from 40960 homemade manycores.
