@@ -46,7 +46,7 @@ A Central Processing Unit (CPU) is the part of computers that do the computation
 \label{fig:VonNeumann}
 \end{figure}
 
-A CPU executes a flow of instructions according to a fixed pipeline. The most simple pipeline is Instruction Fetch, Instruction Decode, Execute, Write Back.
+A CPU executes a flow of instructions according to a fixed pipeline. The most simple pipeline is Instruction Fetch, Instruction Decode, Execute, Write Back. This simple pipeline is described by Figure~\ref{fig:Pipeline}.
 \begin{itemize}
 \item Fetch : The instruction is loaded from the main memory.
 \item Decode : The instruction is decoded inside the processor, ie the processor understands what it has to compute.
@@ -54,17 +54,21 @@ A CPU executes a flow of instructions according to a fixed pipeline. The most si
 \item Write Back : The result is written back in memory.
 \end{itemize}
 
-\todo{dessin pipeline}
+\begin{figure}
+\centering
+\includegraphics[width=6cm]{gfx/Parallelism/Pipeline.png}
+\caption{Simple CPU pipeline}
+\label{fig:Pipeline}
+\end{figure}
 
-To enhance the performance of a program, some optimisations can be done at Pipeline-Level. For example, speculative execution allows the processor to load instruction before the end of others running instructions. \todo{faire example de boucle qui charge la dereniere iteration alors qu'il fallait pas}
+To enhance the performance of a program, some optimisations can be done at Pipeline-Level. For example, speculative execution allows the processor to load instruction before the end of others running instructions. For instance, when inside a loop, the CPU loads data and instruction for the next instruction before the end of the execution of the current one. This make the whole process faster because we don't wait for the end of an instruction to launch the next one. But, when the condition of the loop breaks, we load to much instruction and we have to not write to memory the result of the unnecessary instructions.
 
 The advantage of a CPU is that it is possible to design instructions for every specific needs : there are some instructions only used for cryptography in our modern processor. The disavantadge is that the circuit become bigger and bigger and so slower and slower. A CPU follows a single instruction single data  schema : this means that one instruction operate on one data. Performance on vector operations are bad that is why modern processors have Single Instruction Multiple Datas (SIMD) instructions that can perform the same operations on multiple data (doing +2 on all cells of an array for example).
 
 \subsection{GPU}
 A \emph{Graphics Processing Unit}, or \emph{GPU}, is a circuit that has been designed to efficiently manipulate images. Every devices that have a screen have a GPU. A GPU contains a lot of simple core that can operates in parallel. At the begining, GPU were designed to rendered images, especially for video games. Today, they are used in others fields like high performance computing. Some GPU does not even have video output : such cards are called accelerators.
 
-At the beginning of computation on GPU, the programers had to convert their problems into a shader version because GPU are only able to make computation on shaders. \todo{lien vers ce qu'est un shader}. Nowadays, some high level framework has been developped to abstract all the shader mechanisms. The most common one is \emph{CUDA} \todo{lien vers cuda} developped by NVIDIA, for NVIDIA cards. The main idea of CUDA is the separation between the Host (the CPU) and the Device (the GPU). The CPU asks to the Device to run a kernel on an array. Then, datas are transfered to the GPU. The GPU operates on the data and finally the results are send back to the CPU. All the memory transferts are very costly but the acceleration provided by the GPU makes the whole process faster. 
-\todo{example kernel}
+At the beginning of computation on GPU, the programers had to convert their problems into a shader version because GPU are only able to make computation on shaders. \todo{lien vers ce qu'est un shader}. Nowadays, some high level framework has been developped to abstract all the shader mechanisms. The most common one is \href{https://developer.nvidia.com/cuda-zone}{\emph{CUDA}} developped by NVIDIA, for NVIDIA cards. The main idea of CUDA is the separation between the Host (the CPU) and the Device (the GPU). The CPU asks to the Device to run a kernel on an array. Then, datas are transfered to the GPU. The GPU operates on the data and finally the results are send back to the CPU. All the memory transferts are very costly but the acceleration provided by the GPU makes the whole process faster. 
 
 To sum up the advantage of GPU, they can operate way more faster than CPU on array computations. But for that, code should have less dependencies as possible.
 
