@@ -3,11 +3,16 @@
 %************************************************
 
 \section{Architecture}
-Polly is a loop and data-locality optimizer for LLVM. The optimisations are made using a mathematical model called the polyhedral model. A key aspect of the model is the ability to reason about the memory access behavior in a very fine-granular way. This enables us to express very fine-granular way in a mathematical domain, where we deal with polyhedra instead of LLVM instructions. After modeling, transformations (tilling, loop fusion, loop unrolling …) can be applied on the model to improve data-locality and/or parallelization.
+Polly is a loop and data-locality optimizer for LLVM\todo{citer Polly}. The optimisations are made using a mathematical model called the polyhedral model. A key aspect of the model is the ability to reason about the memory access behavior in a very fine-granular way. This enables us to express very fine-granular way in a mathematical domain, where we deal with polyhedra instead of LLVM instructions. After modeling, transformations (tilling, loop fusion, loop unrolling …) can be applied on the model to improve data-locality and/or parallelization.
 
-To do this, polly acts in three steps. First, it detects interesting code and translates it into a polyhedral representation. Then, it does some analysis and transformations passes that operate on the LLVM-IR. Finally, it generates code for the desired target. These three steps are called front-end, middle part and back-end passes.
+To do this, polly acts in three steps. First, it detects interesting code and translates it into a polyhedral representation. Then, it does some analysis and transformations passes that operate on the LLVM-IR. Finally, it generates code for the desired target. These three steps are called front-end, middle part and back-end passes. This pipeline is described in Figure~\ref{fig:Architecture}.
 
-\todo{Ajouter la figure 9 de la these de Tobias}
+\begin{figure}
+\centering
+\includegraphics[scale=0.4]{gfx/Polly/Architecture.png}
+\caption{Architecture of Polly}
+\label{fig:PollyArchitecture}
+\end{figure}
 
 In the front-end passes, Polly detects which part of the code will be optimised. Those part are called Static Control Parts (SCoPs). Then Polly transforms those SCoPs into a polyhedral representation. 
 
@@ -35,14 +40,22 @@ The control flow contains only for-loops and if-conditions and :
 \end{itemize}\end{definition}
 
 Polly, by default, does not optimise all SCoPs. It select profitable one with a very simple algorithm. A SCoP is considered profitable if :
-\todo{voir avec luc pour les criteres }
 \begin{itemize}
-\item d
+\item There are read and write statements.
+\item There are at least two affine loops. 
+\item There are more instruction per loop than a threshold.
 \end{itemize}
+
 It is possible to force Polly to optimise every SCoP with the option $-polly-process-unprofitable$. This approach is very simple and not efficient. During my thesis, one of my colleague has worked on a different approach to select profitable SCoP based on Profiled Guided Optimisation (PGO).\todo{Reference vers Luc}
 
-After Scop transformations, Polly create a divergence at the place where the SCoP was. One branch is the old code, one other is the optimised version. Some tests, at runtime, are performed to choose the right code to be optimised. For instance, Polly is not able to handle pointers that overlapsed, but the detection can only be made at run-time.
-\todo{Ajouter beau dessin}
+After Scop transformations, Polly create a divergence at the place where the SCoP was. One branch is the old code, one other is the optimised version. Some tests, at runtime, are performed to choose the right code to be optimised. For instance, Polly is not able to handle pointers that overlapsed, but the detection can only be made at run-time. For a more visual understanding, see Figure~\ref{fig:ScopSplit}.
+\begin{figure}
+\centering
+\includegraphics[scale=0.3]{gfx/Polly/ScopSplit.png}
+\caption{Divergence between old code and new code}
+\label{fig:ScopSplit}
+\end{figure}
+
 
 \section{Polyhedral representation inside Polly}
 Polly uses a polyhedral representation based on ISL, the library described in chapter\ref{ch:ISL}.
@@ -58,7 +71,29 @@ A \emph{schedule} is a map that assigns to each iteration vector, a point in tim
 A \emph{access} is a \emph{kind} and a \emph{relation}. The \emph{kind} can be $write$, $read$ or $MayWrite$. $MayWrite$ occurs when the write access can be executed or not, depending on execution : a write access inside a if-condition is represented as a $MayWrite$. A \emph{relation} is a map that maps statement domain to a memory location. 
 
 To have a more clear view of the polyhedral representation, here is an example :
-\todo{faire un exemple}
+\begin{lstlisting}[frame=single]
+for (int i = 0; i < N; i++) {
+   for (int j = 0; j < N; j++) {
+S:   B[i][j] = i*j;;
+   }
+}
+\end{lstlisting}
+There is only one statement in this \emph{SCoP}, named S.
+
+The \emph{context} of this SCoP is :
+\[
+[N] -> \{ \}
+\]
+
+The \emph{domain} of S is :
+\[
+[N] -> \{ S[i][j] : 0\le i \le N \wedge 0\le j \le N \}
+\]
+
+There is only one memory access, a Write memory access, models as follows :
+\[
+\{ S[i][j] \rightarrow B[i][j] \}
+\]
 
 Polly also uses a ISL-based representation for dependences. An example can be found in chapter\ref{ch:ISL}.
 

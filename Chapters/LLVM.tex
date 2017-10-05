@@ -2,7 +2,7 @@
 \chapter{LLVM}\label{ch:LLVM}
 %************************************************
 
-The Low Level Virtual Machine (LLVM)is a compiler framework developped by Lattner and Adve. The main idea is that LLVM works on an intermediate language, called LLVM-IR. This language is between assembly and high level language : human-readable but close to architecture. The framework operates at compile time, at link time and at run time using analysis and transformations passes. LLVM can generate executable for different architectures like x86, x86-64, ARM and also for parallel architectures with the NVPTX backend. The LLVM pipeline can process a variety of programming languages, for instance C/C++, FORTRAN, Ruby, Python. 
+The Low Level Virtual Machine (LLVM)is a compiler framework developped by Lattner and Adve\todo{Citer llvm}. The main idea is that LLVM works on an intermediate language, called LLVM-IR. This language is between assembly and high level language : human-readable but close to architecture. The framework operates at compile time, at link time and at run time using analysis and transformations passes. LLVM can generate executable for different architectures like x86, x86-64, ARM and also for parallel architectures with the NVPTX backend. The LLVM pipeline can process a variety of programming languages, for instance C/C++, FORTRAN, Ruby, Python. 
 
 \section{LLVM Architecture and Pipeline}
 LLVM is not a single-block application but a set of libraries. Each library do a single step in the LLVM pipeline. It is possible to call only one library with the command line or let the compiler work by itself. In this section, the LLVM Pipeline will be described. At each stage, the corresponding tool will be mentionned.
@@ -35,7 +35,7 @@ CreateMalloc (Instruction *InsertBefore, Type *IntPtrTy, Type *AllocTy, Value *A
 CreateFree (Value *Source, Instruction *InsertBefore)
 \end{lstlisting}
 
-In this thesis, some examples will be written in LLVM-IR for the sake of simplicity. If the reader has some troubles to understand the code, a full definition can be found here. \todo{add link}
+In this thesis, some examples will be written in LLVM-IR for the sake of simplicity. If the reader has some troubles to understand the code, a full definition can be found \href{https://llvm.org/docs/LangRef.html}{here}.
 
 \section{Passes}
 LLVM works with a mechanism of passes. Passes perform transformations and optimizations on the code. They also make analysis that will be used by other passes. A pass can depends on others passes. For instance, a pass that get rid of dependencies will depend on the pass that computes these dependencies.
