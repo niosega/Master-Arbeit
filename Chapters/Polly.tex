@@ -25,7 +25,7 @@ There are two ways to enable polly. It is possible to enable Polly directly from
 \section{Profitable code and SCop}
 Polly operates on a low level representation of the code called LLVM-IR. This language has been designed to perform low-level optimisations. To focus on important high-level optimisation problems, it is important to have a more abstract representation. In this section, we will discuss about the polyhedral representation used by Polly and a definition of what kind of code can be translated to this representation.
 
-Polyhedral optimisers work on Static Control Parts (SCoP) of a function. A Static Control Parts is a part of code in which all control flow and memory accesses are known at compile time. This means that it is possible to run precise and detailled analysis during compilation. Some optimisers also work with non-statically known control flow, some use a Just In Time (JIT) mechanism, but Polly only focus on statically known control flow. \todo{Faire un lien vers polli jit}
+Polyhedral optimisers work on Static Control Parts (SCoP) of a function. A Static Control Parts is a part of code in which all control flow and memory accesses are known at compile time. This means that it is possible to run precise and detailled analysis during compilation. Some optimisers also work with non-statically known control flow, some use a Just In Time (JIT) mechanism, but Polly only focus on statically known control flow. An extension to Polly, called PolyJit\cite{PolyJit}, is able to operates at run-time.
 
 \begin{definition}{}
 A SCoP is a part of a code in which :
@@ -46,7 +46,7 @@ Polly, by default, does not optimise all SCoPs. It select profitable one with a 
 \item There are more instruction per loop than a threshold.
 \end{itemize}
 
-It is possible to force Polly to optimise every SCoP with the option $-polly-process-unprofitable$. This approach is very simple and not efficient. During my thesis, one of my colleague has worked on a different approach to select profitable SCoP based on Profiled Guided Optimisation (PGO).\todo{Reference vers Luc}
+It is possible to force Polly to optimise every SCoP with the option $-polly-process-unprofitable$. This approach is very simple and not efficient. During my thesis, one of my colleague has worked on a different approach to select profitable SCoP based on Profiled Guided Optimisation (PGO)\cite{PGO}.
 
 After Scop transformations, Polly create a divergence at the place where the SCoP was. One branch is the old code, one other is the optimised version. Some tests, at runtime, are performed to choose the right code to be optimised. For instance, Polly is not able to handle pointers that overlapsed, but the detection can only be made at run-time. For a more visual understanding, see Figure~\ref{fig:ScopSplit}.
 \begin{figure}
