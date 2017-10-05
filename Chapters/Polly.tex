@@ -99,7 +99,62 @@ Polly also uses a ISL-based representation for dependences. An example can be fo
 
 \section{JSON Importer/Exporter}
 Polly allows the user to export the SCoP representation into a JSON file. At the beginning, Polly was not able to perform optimisation. The aim of the JSON Importer/Exporter was to allow users to use their own polyhedral optimisers. 
-\todo{Example of json export}
+
+Let take an example.
+\begin{lstlisting}[frame=single]
+int Ni = 1056;
+int Nk = 1024;
+int Nj = 1056;
+void func(double beta, double A[Ni][Nk], double B[Ni][Nj]) {
+  int i,j,k;
+
+  for (i = 0; i < Ni; i++) {
+    for (j = 0; j < Nj; j++) {
+      for (k = 0; k < Nk; ++k) {
+        B[i][j] = 10 * A[i][k];
+      }
+    }
+  }
+}
+\end{lstlisting}
+
+The JSCoP representation of this SCoP is :
+\begin{lstlisting}[frame=single]
+{
+   "arrays" : [
+      {
+         "name" : "MemRef_A",
+         "sizes" : [ "*", "1024" ],
+         "type" : "double"
+      },
+      {
+         "name" : "MemRef_B",
+         "sizes" : [ "*", "1056" ],
+         "type" : "double"
+      }
+   ],
+   "context" : "{  :  }",
+   "name" : "%for.cond1.preheader---%for.end18",
+   "statements" : [
+      {
+         "accesses" : [
+            {
+               "kind" : "read",
+               "relation" : "{ S[i0, i1, i2] -> MemRef_A[i0, i2] }"
+            },
+            {
+               "kind" : "write",
+               "relation" : "{ S[i0, i1, i2] -> MemRef_B[i0, i1] }"
+            }
+            }
+         ],
+         "domain" : "{ S[i0, i1, i2] : 0 <= i0 <= 1055 and 0 <= i1 <= 1055 and 0 <= i2 <= 1023 }",
+         "name" : "S",
+         "schedule" : "{ S[i0, i1, i2] -> [i0, i1, i2] }"
+      }
+   ]
+}
+\end{lstlisting}
 
 As first step in open source software development and to get familiar with Polly/LLVM development process, I fixed an open bug in Polly. From a JSON file it is possible to alter the existing modelling of a SCoP and even trigger code generation for new array accesses. This interface is mainly used for debugging and testing and therefore lacked a lot of consistency checks. This often triggered errors in the remaining part of the Polly optimization pipeline. My first step was, therefore, to implement those missing checks.
 
