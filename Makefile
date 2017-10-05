@@ -37,4 +37,4 @@ git:
 	git push
 
 clean:
-	rm *aux *lo* *aux *toc *out *gz *~ *tps *xml FrontBackmatter/*aux Chapters/*aux ClassicThesis.pdf
+	rm *aux *lo* *aux *toc *out *gz *~ *tps *xml FrontBackmatter/*aux Chapters/*aux ClassicThesis.pdf *bbl *blg FrontBackmatter/*bbl FrontBackmatter/*blg
