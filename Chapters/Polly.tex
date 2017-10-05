@@ -3,7 +3,7 @@
 %************************************************
 
 \section{Architecture}
-Polly is a loop and data-locality optimizer for LLVM\todo{citer Polly}. The optimisations are made using a mathematical model called the polyhedral model. A key aspect of the model is the ability to reason about the memory access behavior in a very fine-granular way. This enables us to express very fine-granular way in a mathematical domain, where we deal with polyhedra instead of LLVM instructions. After modeling, transformations (tilling, loop fusion, loop unrolling …) can be applied on the model to improve data-locality and/or parallelization.
+Polly is a loop and data-locality optimizer for LLVM\cite{Polly}. The optimisations are made using a mathematical model called the polyhedral model. A key aspect of the model is the ability to reason about the memory access behavior in a very fine-granular way. This enables us to express very fine-granular way in a mathematical domain, where we deal with polyhedra instead of LLVM instructions. After modeling, transformations (tilling, loop fusion, loop unrolling …) can be applied on the model to improve data-locality and/or parallelization.
 
 To do this, polly acts in three steps. First, it detects interesting code and translates it into a polyhedral representation. Then, it does some analysis and transformations passes that operate on the LLVM-IR. Finally, it generates code for the desired target. These three steps are called front-end, middle part and back-end passes. This pipeline is described in Figure~\ref{fig:Architecture}.
 

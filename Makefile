@@ -17,6 +17,9 @@ endif
 all:
 	pdflatex -synctex=1 -interaction=nonstopmode ClassicThesis.tex
 
+bib:
+	bibtex ClassicThesis
+
 show:
 	thunar ClassicThesis.pdf
 
