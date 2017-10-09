@@ -1,3 +1,84 @@
 %************************************************
 \chapter{Maximal Static Expansion}\label{ch:MSE}
 %************************************************
+
+\section{Motivations}
+Data-dependences in a program can lead to a very bad automatic parallelization. Modern compilers use techniques to reduce the number of such dependences. One of them is Maximal Static Expansion. The MSE is a transformation which expand the memory access to and from Array or Scalar. The goal is to disambiguate memory accesses by assigning different memory locations to non-conflicting writes. This method is described in a paper written by Denis Barthou, Albert Cohen and Jean- Francois Collard\cite{MSE}. Let take a example (from the article) to understand the principle :
+\begin{lstlisting}[frame=single]
+int tmp;
+for (int i = 0; i < N; i++) {
+    tmp = i;
+    for (int j = 0; j < N; j++) {
+        tmp = tmp + i + j;
+    }
+    A[i] = tmp;
+}
+\end{lstlisting}
+
+The data-dependences induced by tmp make the two loops unparallelizable : the iteration j of the inner-loop needs value from the previous iteration and it is impossible to parrallelize the i-loop because tmp is used in all iterations. If we expand the accesses to tmp according to the outermost loop, we can then parallelize the i-loop.
+
+\begin{lstlisting}[frame=single]
+int tmp_exp[N];
+for (int i = 0; i < N; i++) {
+    tmp_exp[i] = i;
+    for (int j = 0; j < N; j++) {
+        tmp_exp[i] = tmp_exp[i] + i + j;
+    }
+    A[i] = tmp_exp[i];
+}
+\end{lstlisting}
+
+The accesses to tmp are now made to/from a different location for each iteration of the i-loop. It is then possible to execute the different iteration on different computation units (GPU, CPU …).
+
+We will present in the next sections two differents methods to expand memory access : Fully-Indexed and Maximal Static expansion.
+
+\section{Fully-Indexed Expansion}
+The principle of fully-index expansion is that each write goes to a different memory location. This expansion is the maximum one in term of memory needed. Depending on the characteristics of the code expanded, it could be the fast expansion or the worst but never the best one in terms of memory consumption.
+
+The mechanisms to fully expand the memory accesses is to expand the write access according to the loop inductions variables and map the read access to the newly expanded arrays. Let see that on an example :
+
+\begin{lstlisting}[frame=single]
+int tmp;
+for (int i = 0; i < N; i++) {
+    tmp = i;
+    for (int j = 0; j < N; j++) {
+S:      B[j] = tmp + 3;
+    }
+T:  A[i] = B[i];
+}
+\end{lstlisting}
+
+There are two write accessses :
+\[
+\{T[i] \rightarrow A[i]:0<=i<=N\}
+\]
+This one is already fully expanded. So no need of expansion for the array A.
+
+\[
+\{S[i,j] \rightarrow B[j]:0<=i<=N,0<=j<=N\}
+\]
+The statement S is inside a two dimensional loop nest and access the array B that is a one-dimension array. So the array B needs expansion. We then create a new 2D array called $B_{exp}$, indexed with the loop induction variables $i$ and $j$.
+
+The write access of B has been modified so it is necessary to remap the read access of B to $B_{exp}$. To get the memory location read by a statement, dependencies analysis is needed. The idea to remap accesses is to analyse RAW dependencies between statements. For example, in our code, there is a RAW dependency between T and S :
+\[
+\{[T[i] \rightarrow B[i]] \rightarrow [S[i,i] \rightarrow B[i,i]]:0<=i<=N\}
+\]
+This ISL map means that the statement the read access made during the execution of statement T[i] reads a memory location written by statement S[i][i]. The new read accesses must be :
+ \[
+\{T[i] \rightarrow B[i][i]:0<=i<=N\}
+\]
+
+Here is the final expanded example :
+\begin{lstlisting}[frame=single]
+int tmp;
+for (int i = 0; i < N; i++) {
+    tmp = i;
+S:  for (int j = 0; j < N; j++) {
+        B_exp[i][j] = tmp + 3;
+    }
+T:  A[i] = B_exp[i][i];
+}
+\end{lstlisting}
+
+
+\section{Maximal Static Expansion}
