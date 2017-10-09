@@ -30,7 +30,7 @@ There are multiples optimisations in modern compilers that act at Instruction-Le
 
 Parallelism can be found at two stages :
 \begin{itemize}
-\item Software : Even if the most common languages were created for non-parallel architectures, more and more library or compilers options are developped to enhance parallelism during compilation/execution. Some implicitly parallel languages exist (\href{https://texasmulticore.com/technology/sequencel-at-a-glance/}{SequenceL} for instance) but are not widely used.
+\item Software : Even if the most common languages were created for non-parallel architectures, more and more library or compilers options are developped to enhance parallelism during compilation/execution. Some implicitly parallel languages exist (\footurl{https://texasmulticore.com/technology/sequencel-at-a-glance/}{SequenceL} for instance) but are not widely used.
 \item Hardware : Some architecture are better for few kind of computation. For example, GPU behave well with array operations. The architecture (memory types and placement, type of nodes and computational units) allows better performance and parallelism  for only a restrict number of cases. Parallelism is the art of building a system that fit to our needs.
 \end{itemize}
 
@@ -38,7 +38,7 @@ Parallelism can be found at two stages :
 In this section, we will describe the main architectures that are available to execute programs. The principle, advantages and disavantadges of each will be presented.
 
 \subsection{CPU}
-A Central Processing Unit (CPU) is the part of computers that do the computations. This is the most common type of computational units, everyone has one in its machine. The market is flooded  by \href{www.intel.com}{Intel} and \href{www.amd.com}{AMD}. A processor can have one or multiple cores (nowadays 2 to 8), each core is an independant computational unit but the memory is shared between all of them. Figure~\ref{fig:VonNeumann} shows a well known drawing called Von Neumann architecture. On the left, the processor with 4 cores. On the right, the memory. These two components interact together in both direction (CPU to Mem, Mem to CPU).
+A Central Processing Unit (CPU) is the part of computers that do the computations. This is the most common type of computational units, everyone has one in its machine. The market is flooded  by \footurl{www.intel.com}{Intel} and \footurl{www.amd.com}{AMD}. A processor can have one or multiple cores (nowadays 2 to 8), each core is an independant computational unit but the memory is shared between all of them. Figure~\ref{fig:VonNeumann} shows a well known drawing called Von Neumann architecture. On the left, the processor with 4 cores. On the right, the memory. These two components interact together in both direction (CPU to Mem, Mem to CPU).
 \begin{figure}
 \centering
 \includegraphics[width=6cm]{gfx/Parallelism/VonNeumann.png}
@@ -68,7 +68,7 @@ The advantage of a CPU is that it is possible to design instructions for every s
 \subsection{GPU}
 A \emph{Graphics Processing Unit}, or \emph{GPU}, is a circuit that has been designed to efficiently manipulate images. Every devices that have a screen have a GPU. A GPU contains a lot of simple core that can operates in parallel. At the begining, GPU were designed to rendered images, especially for video games. Today, they are used in others fields like high performance computing. Some GPU does not even have video output : such cards are called accelerators.
 
-At the beginning of computation on GPU, the programers had to convert their problems into a shader version because GPU are only able to make computation on shaders. Nowadays, some high level framework has been developped to abstract all the shader mechanisms. The most common one is \href{https://developer.nvidia.com/cuda-zone}{\emph{CUDA}} developped by NVIDIA, for NVIDIA cards. The main idea of CUDA is the separation between the Host (the CPU) and the Device (the GPU). The CPU asks to the Device to run a kernel on an array. Then, datas are transfered to the GPU. The GPU operates on the data and finally the results are send back to the CPU. All the memory transferts are very costly but the acceleration provided by the GPU makes the whole process faster. 
+At the beginning of computation on GPU, the programers had to convert their problems into a shader version because GPU are only able to make computation on shaders. Nowadays, some high level framework has been developped to abstract all the shader mechanisms. The most common one is \footurl{https://developer.nvidia.com/cuda-zone}{\emph{CUDA}} developped by NVIDIA, for NVIDIA cards. The main idea of CUDA is the separation between the Host (the CPU) and the Device (the GPU). The CPU asks to the Device to run a kernel on an array. Then, datas are transfered to the GPU. The GPU operates on the data and finally the results are send back to the CPU. All the memory transferts are very costly but the acceleration provided by the GPU makes the whole process faster. 
 
 To sum up the advantage of GPU, they can operate way more faster than CPU on array computations. But for that, code should have less dependencies as possible.
 
