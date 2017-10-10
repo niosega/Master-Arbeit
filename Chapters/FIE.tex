@@ -1,3 +1,133 @@
 %************************************************
 \chapter{Full Index Expansion}\label{ch:FIE}
 %************************************************
+Maximal refers to a static expansion that requires the least amount of memory. As before, we have chosen an iterative approach to implement this. With the heap allocation and stable testing support in the JSONImporter in place, we proceed to implementing just any expansion and continue with the implementation of the maximal one. This ensures that we first focus on the correctness of the basic expansion. This will already provide us the elimination of all but true dependencies (also known as flow dependencies). Any optimization we apply afterwards will provide us with less space requirement and, therefore, only expand the useability in terms of memory consumption.
+
+\section{Array expansion}
+This will describe the most simple form of static expansion. From all possible memory access types (Scalars, Arrays, PHI) we have started with an implementation that supports the expansion of only arrays, because we only have to convert one array to another one. As a basic property of static expansion we have one single write per array cell. We ensure this by transforming each write-access into a new array (located on the heap). Afterwards, we have to remap all read accesses to the old write-access to the correct new array and the correct new array index (based on polyhedral dependecy information). Naturally we would resort to statement-level dependencies, which map statement instances (i.e., “S[i][j]” in the example below) to statement- instances. However, due to the coarse granularity of polly (i.e., one BasicBlock forms one statement), we are forced to use reference-based dependencies. These give us the possibility to filter all dependencies for only the one array access that we are interested in for the expansion. The basic implementation of our Fully-Indexed Static Expansion was committed to Polly and can be found \footurl{https://reviews.llvm.org/D34982}{here}. The switch from Statement-Level to Reference-Level dependencies can be found \footurl{https://reviews.llvm.org/D36791}{here}.
+
+\todo{décrire l'algo}
+
+\section{Scalar and PHI expansion}
+Inside Polly one encounters scalar values of two kinds. First, the standard scalar value, which is just a single value (MemoryKind::Value). Second, a PHI node (MemoryKind::PHI). These virtual nodes are represented in Polly as scalar values that are read at the definition of the PHI node, and written at the end of every source BasicBlock. Let us consider the following example:
+
+\begin{lstlisting}[frame=single]
+int tmp = 0;
+for (int i = 0; i < N; i++) {
+    tmp = tmp + 2;
+}
+\end{lstlisting}
+
+In LLVM, everything is transformed in SSA. This means that Polly sees the following source code :
+
+\begin{lstlisting}[frame=single]
+int tmp = 0;
+for (int i = 0; i < N; i++) {
+    tmp_1 = PHI(tmp, tmp_2)
+    tmp_2 = tmp_1 + 2;
+}
+\end{lstlisting}
+
+$tpm1$ has not always the same source depending on the iteration the i-loop is in. If i=0, the source is tmp otherwise the source is $tmp_2$ of the previous iteration.
+
+The expansion of the scalar write access is trivial because it behaves similar to the array case. PHI nodes have to be treated a little bit different to normal memory accesses. Due to their nature of (guaranteed) one read and possibly multiple writes we can switch the roles and perform the same expansion as in the case of normal scalar values.
+
+\todo{example}
+\todo{decrire l'algo}
+
+\section{Limitations}
+\subsection{Read & Write access inside the same statement}
+In the following we will describe a small limitation of our current implementation. Let us consider the following example :
+
+\begin{lstlisting}[frame=single]
+for (int i = 0; i < N; i++) {
+    for (int j = 0; j < N; j++) {
+        B[i] = ... ;
+        ... = B[i];
+    }
+}
+\end{lstlisting}
+
+Polly will model the two instructions as one ScopStatement and detect two memory access inside this statement :
+
+Read :
+\[
+\{ S[i, j] \rightarrow B[i] : 0 \le i \le N, 0 \le j \le N \}
+\]
+
+Write :
+\[
+\{ S[i, j] \rightarrow B[i] : 0 \le i \le N, 0 \le j \le N \}
+\]  
+    
+Then Polly will give these two memory accesses to ISL. But ISL has no information on the order in which the memory accesses appear so it decide that the read comes first, which is not the case in our example. This is a design decision inside Polly that requires us to bail out if such a case is possible.
+
+\subsection{Union map needed as access relation}
+The setNewAccessRelation take as parameter a isl map. But some code may lead to union map as access relation. Let take us an example :
+
+\begin{lstlisting}[frame=single]
+for (int i = 0; i < N; i++) {
+    B[i] = ... ;
+    for (int j = 0; j < N; j++) {
+        B[j] = ... ;
+    }
+    ... = B[i];
+}
+\end{lstlisting}
+
+The only-write expanded version of this example would look like this :
+
+\begin{lstlisting}[frame=single]
+for (int i = 0; i < N; i++) {
+    B_exp[i] = ... ;
+    for (int j = o; j < M; j++) {
+        B_exp2[i][j] = ... ;
+    }
+    ... = B[i+2];
+}
+\end{lstlisting}
+
+To read of B can read either from $B_exp$ or from $B_exp2$. Its memory access relation would look like, assuming that $N>M$ :
+\begin{gather}
+\{ T[i] \rightarrow B\_exp[i] : i \ge M, 0 \le i \le N, 0 \le j \le M ;  \\
+T[i] \rightarrow B\_exp2[i][i] : i < M, 0 \le i \le N, 0 \le j \le M \}
+\end{gather}
+
+This memory access relation is an union map. The method setNewAccessRelation does not take an union map but a map as parameter. Changing this would involve to much changes inside Polly. So we decided to bail out if the expansion would lead to an union map as access relation.
+
+\subsection{Copy-In & Copy-Out}
+For accesses that have been initialized outside the loop where we have our read statements, we need to be able to copy in any data that would have been read from the outside. Let us consider the following example:
+
+\begin{lstlisting}[frame=single]
+for (int i = 0; i < N; i++) {
+    ... = B[i];
+    for (int j = 0; j < N; j++) {
+        B[j] = ... ;
+    }
+}
+\end{lstlisting}
+
+The expanded version of this example would look like :
+
+\begin{lstlisting}[frame=single]
+for (int i = 0; i < N; i++) {
+    ... = B_exp[i][i];
+    for (int j = 0; j < N; j++) {
+        B_exp[i][j] = ... ;
+    }
+}
+
+\end{lstlisting}
+
+The problem is that nobody is writing Bexp[i][i] before it is reading. So we need a copy in mechanism to manually copy data to Bexp from the original array. This mechanism is not yet implemented. The same problem appears when someone is reading a value expanded outside of the Scop. This is the problem of copy-in/out. For now, we just bail out such cases.
+
+Following our incremental approach we, therefore, preclude our expansion with aggressive filtering of all access patterns that we cannot handle yet (or not at all). This filtering will block the expansion of the memory access, if:
+\begin{itemize}
+\item the associated ScopArrayInfo performs a MayWrite access.
+\item the associated ScopArrayInfo has more than one MustWrite access, because this would require us to form the union of more than one access and use it as the new access relation of the ScopArrayInfo. This is not supported by Polly for now.
+\item we would have to read in data from the original array (Copy-In). This is still a work in progress and not yet supported. But nothing inside Polly prevents us in adding support for this.
+\item we would have to read expanded data after the SCoP (Copy-Out). This is still a work in progress and not yet supported. But nothing inside Polly prevents us in adding support for this.
+\item we find a read and a write access to the same array inside a single statement. Here we cannot guarantee correctness because of the granularity of statements inside Polly.
+
+
+\end{itemize}
