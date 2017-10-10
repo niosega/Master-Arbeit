@@ -2,10 +2,10 @@
 \chapter*{Introduction}\label{ch:Intro}
 %************************************************
 
-\todo{Contexte : Nowadays blablabla + intro probleme}
-In the past, computers run with a simple processor without any possibilities of parallelism. Nowaday, new type of processors are on the market : multicore processor \todo{lien vers i7}, manycore \todo{lien vers manycore}, GPU \todo{lien versGPU}. All this kind of unit allows different kind of parallelism. The problem is that a huge number of developer are not efficient at writing parallel
+In the past, computers run with a simple processor without any possibilities of parallelism. Nowaday, new type of processors are on the market : multicore processor, manycore, GPU. All this kind of unit allows different kind of parallelism. The problem is that a huge number of developer are not efficient at writing parallel code. 
 
+Some solutions are now on the market to allow coders to write efficient parallel code. These solutions are divided in two differents categories : manual parallelization and automatic parallelization. Manual parallelization needs an effort from the programmer side to take the advantages of a possibly parallel architecture. One of such solutions is OpenMP. The programmer just add pragma, that can be seen as hints for the compiler, to normal C++ code and the compiler do the work. The second category is automatic parallelization. The goal is to find profitable code and execute them in a parallel way on the available architecture. Polly is an extension to LLVM framework that try to extract parallel section of code in LLVM-IR representation.
 
-\todo{Solutions}
+Both categories of solutions need transformations to compile the code optimally. A lot of transformations or optimisations can be made depending on the nature of the original source code. When writing code, the programmer does not think at dependencies between each line of code, because it would be too boring and time-consuming. But some dependencies make parallelization unpossible and need to be removed. A technique to remove such dependencies is called Maximal Static Expansion : the principle is that each write goes to a unique memory location.
 
-\todo{Roadmap of the report}
+This thesis is organized as follow. This first part will give some background about paralellization, Maximal Static Expansion, ISL, LLVM and Polly. Then, we explain the implementation of Fully-Indexed expansion inside Polly. Next, we describe the experimental results. The next chapters present perspectives and conclusion.
