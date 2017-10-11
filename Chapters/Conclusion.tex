@@ -1,3 +1,11 @@
 %************************************************
 \chapter*{Conclusion}\label{ch:Conclusion}
 %************************************************
+
+In this thesis, we present an implementation of Static Expansion in Polly, an extension to the LLVM framework. Polly apply polyhedral transformations on intermediate representation. Static expansion is a way to get rid of dependencies in a sequential code to allow more parallelisation. Nowadays, everybody have a parallel architecture : in smartphone, in computer, in server use for web services. 
+
+The principle of static expansion is to disambiguate memory access by modifying memory accesses to that every write goes to a different memory location. A fully-indexed expansion is an expansion in which the array are expanded according to the level in which the accesses appears in the loop nest. This is obviously not the more efficient one but the results are promising.
+
+Even with a non optimal expansion, run-time evaluation shows that, on benchmarks belonging to Polybench, the generated code is faster than a code compiled with only -O3 optimisations. Due to the non optimality of the expansion, the memory space needed to do the expansion is a limit. Even with a maximal expansion, the memory needed may be a problem. One solution would be to allow the user to specify an upper bound of available space for expansion.
+
+The mechanism of expansion is in place and is working. To have a fully working maximal static expansion, we need a mechanism of copy-in/out to allow more input source code to be expanded. We also need to modify the way the expansion is made to fit the method described in the paper describing Maximal Static Expansion\cite{Polly}.

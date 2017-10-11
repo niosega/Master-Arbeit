@@ -63,6 +63,3 @@ As expected, whenever we are able to expand accesses, we increase the amount of 
 \end{figure}
 
 Interestingly, we can see on Figure~\ref{fig:RT-3} that the benchmarks ‘floyd-warshal’, ‘nussinov’, did not suffer from memory consumption increase, although we were able to expand accesses at compile-time. This suggests that by expanding an already fully-dimensional access we were able to change the memory access pattern in a positive way. A missing orange bar means that the benchmark crashed at run-time either because of a bug in our expansion, or because of too much memory being consumed. These will be resolved in the next weeks.
-
-\section{Future experiments}
-\todo{decrire des experiencesà mener}
