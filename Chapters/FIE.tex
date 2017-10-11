@@ -6,8 +6,6 @@ Maximal refers to a static expansion that requires the least amount of memory. A
 \section{Array expansion}
 This will describe the most simple form of static expansion. From all possible memory access types (Scalars, Arrays, PHI) we have started with an implementation that supports the expansion of only arrays, because we only have to convert one array to another one. As a basic property of static expansion we have one single write per array cell. We ensure this by transforming each write-access into a new array (located on the heap). Afterwards, we have to remap all read accesses to the old write-access to the correct new array and the correct new array index (based on polyhedral dependecy information). Naturally we would resort to statement-level dependencies, which map statement instances (i.e., “S[i][j]” in the example below) to statement- instances. However, due to the coarse granularity of polly (i.e., one BasicBlock forms one statement), we are forced to use reference-based dependencies. These give us the possibility to filter all dependencies for only the one array access that we are interested in for the expansion. The basic implementation of our Fully-Indexed Static Expansion was committed to Polly and can be found \footurl{https://reviews.llvm.org/D34982}{here}. The switch from Statement-Level to Reference-Level dependencies can be found \footurl{https://reviews.llvm.org/D36791}{here}.
 
-\todo{décrire l'algo}
-
 \section{Scalar and PHI expansion}
 Inside Polly one encounters scalar values of two kinds. First, the standard scalar value, which is just a single value (MemoryKind::Value). Second, a PHI node (MemoryKind::PHI). These virtual nodes are represented in Polly as scalar values that are read at the definition of the PHI node, and written at the end of every source BasicBlock. Let us consider the following example:
 
@@ -30,10 +28,209 @@ for (int i = 0; i < N; i++) {
 
 $tpm1$ has not always the same source depending on the iteration the i-loop is in. If i=0, the source is tmp otherwise the source is $tmp_2$ of the previous iteration.
 
-The expansion of the scalar write access is trivial because it behaves similar to the array case. PHI nodes have to be treated a little bit different to normal memory accesses. Due to their nature of (guaranteed) one read and possibly multiple writes we can switch the roles and perform the same expansion as in the case of normal scalar values.
+The expansion of the scalar write access is trivial because it behaves similar to the array case. PHI nodes have to be treated a little bit different to normal memory accesses. Due to their nature of (guaranteed) one read and possibly multiple writes we can switch the roles and perform the same expansion as in the case of normal scalar values. The expansion to Scalars and PHI nodes was committed as well and can be found \footurl{https://reviews.llvm.org/D36647}{here}.
 
-\todo{example}
-\todo{decrire l'algo}
+\section{Implementation details}
+\subsection{runOnScop}
+Let have a closer look to the algorithm behind expansion. Static expansion is done in a Scop Pass : a Pass that is executed on every Scop. A Scop Pass has a "main" method called runOnScop. Here is a simplified version of the runOnScop of static expansion pass.
+
+\begin{lstlisting}[frame=single]
+bool MaximalStaticExpander::runOnScop(Scop &S) {
+
+  // Get the RAW Dependences.
+  auto &DI = getAnalysis<DependenceInfo>();
+  auto &D = DI.getDependences(Dependences::AL_Reference);
+  auto Dependences = isl::give(D.getDependences(Dependences::TYPE_RAW));
+
+  for (auto SAI : S.arrays()) {
+    SmallPtrSet<MemoryAccess *, 4> AllWrites;
+    SmallPtrSet<MemoryAccess *, 4> AllReads;
+    if (!isExpandable(SAI, AllWrites, AllReads, S, Dependences))
+      continue;
+
+      auto TheWrite = *(AllWrites.begin());
+      ScopArrayInfo *ExpandedArray = expandAccess(S, TheWrite);
+
+      mapAccess(S, AllReads, Dependences, ExpandedArray, true);
+    } else if (SAI->isPHIKind()) {
+      expandPhi(S, SAI, Dependences);
+    }
+  }
+
+  return false;
+}
+\end{lstlisting}
+
+The first 3 lines is a way to get RAW dependencies from the DependenceInfo pass.
+
+Then, we iterate over the ScopArrayInfo of the SCoP and try to expand this ScopArrayInfo.
+\begin{itemize}
+\item If the SAI is not expandable, we continue.
+\item If the SAI is expandable, we expand the Write access and then we map the read accesses according to the algorithm detailed in this section.\todo{lien}
+\item If the access is a PHI access,  we expand the access with the same principle as before but the role of write and read are exchange.
+\end{itemize}
+
+\subsection{Write expansion}
+We will described in this subsection how the write expansion is done inside Polly. An example will be runned throught the explanation. 
+\begin{lstlisting}[frame=single]
+for (int i=0; i<N; i++){
+   for (int j=0; j<N; j++) {
+S:    A[i] = 5;
+   }
+T: ... = A[i];
+}
+\end{lstlisting}
+
+First we get the old write access relation.
+\begin{lstlisting}[frame=single]
+auto CurrentAccessMap = MA->getAccessRelation();
+\end{lstlisting}
+In our example :
+\[
+\{ S[i, j] \rightarrow A[i] : 0 \le i \le N, 0 \le j \le N\}
+\]
+
+Then, we create a new map with the same domain as the old relation.
+\begin{lstlisting}[frame=single]
+// Get domain from the current AM.
+auto Domain = CurrentAccessMap.domain();
+
+// Create a new AM from the domain.
+auto NewAccessMap = isl::map::from_domain(Domain);
+\end{lstlisting}
+In our example :
+\[
+\{ S[i, j] \rightarrow [] : 0 \le i \le N, 0 \le j \le N\}
+\]
+
+We add out dimensions to this newly created map. We add one dimension per induction variable in the loop nest.
+\begin{lstlisting}[frame=single]
+unsigned in_dimensions = CurrentAccessMap.dim(isl::dim::in);
+
+// Add dimensions to the new AM according to the current in_dim.
+NewAccessMap = NewAccessMap.add_dims(isl::dim::out, in_dimensions);
+\end{lstlisting}
+In our example :
+\[
+\{ S[i, j] \rightarrow [o_1, 0_2] : 0 \le i \le N, 0 \le j \le N\}
+\]
+
+We create the new ScopArrayInfo and explicitly allocate this array on the heap.
+
+\begin{lstlisting}[frame=single]
+auto ExpandedSAI = S.createScopArrayInfo(ElementType, CurrentOutIdString, Sizes);
+ExpandedSAI->setIsOnHeap(true);
+\end{lstlisting}
+Let say that the newly create ScopArrayInfo is called $A_exp$.
+
+Then, we set the out id to the name of the newly created ScopArrayInfo.
+\begin{lstlisting}[frame=single]
+NewAccessMap = NewAccessMap.set_tuple_id(isl::dim::out, NewOutId);
+\end{lstlisting}
+In our example :
+\[
+\{ S[i, j] \rightarrow A_{exp}[o_1, 0_2] : 0 \le i \le N, 0 \le j \le N\}
+\]
+
+We have to add constraint to link the out and in dimensions, otherwise the relation is wrong.
+\begin{lstlisting}[frame=single]
+auto SpaceMap = NewAccessMap.get_space();
+  auto ConstraintBasicMap =
+      isl::basic_map::equal(SpaceMap, SpaceMap.dim(isl::dim::in));
+  NewAccessMap = isl::map(ConstraintBasicMap);
+\end{lstlisting}
+In our example :
+\[
+\{ S[i, j] \rightarrow A_{exp}[o_1, 0_2] : 0 \le i \le N, 0 \le j \le N, i=o_1, j=o_2\}
+\]
+That can be simplified as :
+\[
+\{ S[i, j] \rightarrow A_{exp}[i, j] : 0 \le i \le N, 0 \le j \le N\}
+\]
+
+Finally we set the new access relation.
+\begin{lstlisting}[frame=single]
+MA->setNewAccessRelation(NewAccessMap);
+\end{lstlisting}
+
+The only-write expanded version of the code example is :
+\begin{lstlisting}[frame=single]
+for (int i=0; i<N; i++){
+   for (int j=0; j<N; j++) {
+S:    A_exp[i][j] = 5;
+   }
+T: ... = A[i];
+}
+\end{lstlisting}
+
+\subsection{Read expansion}
+Now that we have expanded the write, let do the read expansion ! The read expansion is just a remapping and is super easy.
+
+In our example, the read access relation is :
+\[
+\{ T[i] \rightarrow A[i] : 0 \le i \le N\}
+\]
+
+The RAW dependency is :
+\[
+\{[T[i] \rightarrow A[i] \rightarrow [S[i,j] \rightarrow B[i,i]]:0<=i<=N,0<=j<=N\}
+\]
+
+First of all we get the current access relation.
+\begin{lstlisting}[frame=single]
+auto CurrentAccessMap = MA->getAccessRelation();
+\end{lstlisting}
+In our example :
+\[
+\{ T[i] \rightarrow A[i] : 0 \le i \le N\}
+\]
+
+Then, we intersect the set of RAW dependencies to get only those that are related to the memory access we want to expand.
+\begin{lstlisting}[frame=single]
+// Get RAW dependences for the current WA.
+auto DomainSet = MA->getAccessRelation().domain();
+auto Domain = isl::union_set(DomainSet);
+
+// Get the dependences relevant for this MA.
+isl::union_map MapDependences;
+MapDependences = filterDependences(S, Dependences, MA);
+
+auto NewAccessMap = isl::map::from_union_map(MapDependences);
+\end{lstlisting}
+Because we bailed out on case that cause us troubles, there should be only one left dependency. The method $filterDependences$ return this dependency as a Statement to Statement map.
+In our example, the reference to reference dependency is :
+\[
+\{[T[i] \rightarrow A[i] \rightarrow [S[i,j] \rightarrow B[i,i]]:0<=i<=N,0<=j<=N\}
+\]
+So the corresponding statement to statement dependency is :
+\[
+\{T[i] \rightarrow S[i,j] : 0<=i<=N,0<=j<=N\}
+\]
+
+We replace the out id with the id of the newly created ScopArrayInfo.
+\begin{lstlisting}[frame=single]
+auto Id = ExpandedSAI->getBasePtrId();
+NewAccessMap = NewAccessMap.set_tuple_id(isl::dim::out, Id);
+\end{lstlisting}
+In our example :
+\[
+\{T[i] \rightarrow A_exp[i,j] : 0<=i<=N,0<=j<=N\}
+\]
+
+Finally, we set the new access relation to the memory access.
+\begin{lstlisting}[frame=single]
+MA->setNewAccessRelation(NewAccessMap);
+\end{lstlisting}
+
+Finally, the expanded example is :
+\begin{lstlisting}[frame=single]
+for (int i=0; i<N; i++){
+   for (int j=0; j<N; j++) {
+S:    A_exp[i][j] = 5;
+   }
+T: ... = A_exp[i][i];
+}
+\end{lstlisting}
 
 \section{Limitations}
 \subsection{Read & Write access inside the same statement}
