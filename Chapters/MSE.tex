@@ -3,7 +3,7 @@
 %************************************************
 
 \section{Motivations}
-Data-dependences in a program can lead to a very bad automatic parallelization. Modern compilers use techniques to reduce the number of such dependences. One of them is Maximal Static Expansion. The MSE is a transformation which expand the memory access to and from Array or Scalar. The goal is to disambiguate memory accesses by assigning different memory locations to non-conflicting writes. This method is described in a paper written by Denis Barthou, Albert Cohen and Jean- Francois Collard\cite{MSE}. Let take a example (from the article) to understand the principle :
+Data-dependences in a program can lead to a very bad automatic parallelization. Modern compilers use techniques to reduce the number of such dependences. One of them is \ac{MSE}. The \ac{MSE} is a transformation which expand the memory access to and from Array or Scalar. The goal is to disambiguate memory accesses by assigning different memory locations to non-conflicting writes. This method is described in a paper written by Denis Barthou, Albert Cohen and Jean- Francois Collard\cite{MSE}. Let take a example (from the article) to understand the principle :
 \begin{lstlisting}[frame=single]
 int tmp;
 for (int i = 0; i < N; i++) {
@@ -28,7 +28,7 @@ for (int i = 0; i < N; i++) {
 }
 \end{lstlisting}
 
-The accesses to tmp are now made to/from a different location for each iteration of the i-loop. It is then possible to execute the different iteration on different computation units (GPU, CPU …).
+The accesses to tmp are now made to/from a different location for each iteration of the i-loop. It is then possible to execute the different iteration on different computation units (\ac{GPU}, \ac{CPU} …).
 
 We will present in the next sections two differents methods to expand memory access : Fully-Indexed and Maximal Static expansion.
 
@@ -59,11 +59,11 @@ This one is already fully expanded. So no need of expansion for the array A.
 \]
 The statement S is inside a two dimensional loop nest and access the array B that is a one-dimension array. So the array B needs expansion. We then create a new 2D array called $B_{exp}$, indexed with the loop induction variables $i$ and $j$.
 
-The write access of B has been modified so it is necessary to remap the read access of B to $B_{exp}$. To get the memory location read by a statement, dependencies analysis is needed. The idea to remap accesses is to analyse RAW dependencies between statements. For example, in our code, there is a RAW dependency between T and S :
+The write access of B has been modified so it is necessary to remap the read access of B to $B_{exp}$. To get the memory location read by a statement, dependencies analysis is needed. The idea to remap accesses is to analyse \ac{RAW} dependencies between statements. For example, in our code, there is a \ac{RAW} dependency between T and S :
 \[
 \{[T[i] \rightarrow B[i]] \rightarrow [S[i,i] \rightarrow B[i,i]]:0<=i<=N\}
 \]
-This ISL map means that the statement the read access made during the execution of statement T[i] reads a memory location written by statement S[i][i]. The new read accesses must be :
+This \ac{ISL} map means that the statement the read access made during the execution of statement T[i] reads a memory location written by statement S[i][i]. The new read accesses must be :
  \[
 \{T[i] \rightarrow B[i][i]:0<=i<=N\}
 \]
