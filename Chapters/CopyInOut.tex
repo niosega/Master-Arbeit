@@ -1,24 +1,19 @@
 %************************************************
 \chapter{Implementation of Copy In/Out}\label{ch:CopyInOut}
 %************************************************
-I think using memcpy won't work. There is no guarantee that the memory
-existing memory layout directly corresponds to the expanded layout. If
-it matches, LLVM has a LoopIdiom pass that will convert a loop that
-implements a memory copy to memcpy anyway.
 
+Copy-in/out mechanism is not yet implemented, but we had few discussions about it. 
 
-I think there are multiple cases to consider.
+At first, we thought at a solution using memcpy intrisics present in LLVM-IR. But after a discussion with the Polly community, it turns out that memcpy is probably not a reliable solution : there are no guarantee that the existing memory layout directly corresponds to the expanded layout. And if it matches, LLVM has a LoopIdiom pass that will convert a loop that implements a memory copy to memcpy anyway.
 
+To have a clear idea on how to implement Copy-in / out, let consider multiple cases :
 
-1. Copy-in of an llvm::Value
+\section{Copy-in of an llvm::Value}
+This means the llvm::Value is defined outside of the SCoP. It has just one value during the SCoP, no expansion needed.
 
-This means the llvm::Value is defined outside of the SCoP. It has just
-one value during the SCoP, no expansion needed.
-
-2. Copy-in of PHI
-
-Example:
-
+\section{Copy-in of PHI}
+Let take an example :
+\begin{lstlisting}[frame=single]
 enter:
   %initval = ...
   br %scop_start
@@ -32,52 +27,42 @@ scop_latch:
   %i.next = add %i, 1
   %x = ...
   br %scop_start,
+\end{lstlisting}
 
+\%phi can be expanded using \%i as index ("\%phi[\%i]"). If it is not coming from \%scop\_latch, it will have the value \%initval. That is, we can initialize all values of \%phi[\%i] with \%initval. It will be overwritten by \%x if not comming from \%scop\_latch. If we want to be precise, only \%phi[0] needs to be initiliazed to \%initval because the others memory cells will be overwritten anyway.
 
-%phi can be expanded using %i as index ("%phi[%i]"). If it is not
-coming from %scop_latch, it will have the value %initval. That is, we
-can initialize all values of %phi[%i] with %initval. it will be
-overwritten by %x if not comming from %scop_latch.
+\section{Copy-in of an array...}
+\subsection{... that is not written to inside the SCoP}
+There are no write accesses, so no expansion is needed.
 
-You can make use of the fact that only %phi[0] will need to be
-initialized using %initval, the other values will be overwritten
-anyway.
-
-
-3a. Copy-in of an array that is not written to inside the SCoP
-
-Does not need to be expanded.
-
-
-3b. Copy-in of an array that is written inside the SCoP.
-
-By construction, we identify uses of an array element by the statement
-that wrote it. For instance:
-
+\subsection{... that is written to inside the SCoP}
+By construction, we identify uses of an array element by the statement that wrote it. For instance:
+\begin{lstlisting}[frame=single]
     for (int i = 0; i < n: i+=1)
 S:  A[i] = ...;
 
     for (int i = 0; i < 2*n: i+=1)
 T:   ... = A[i];
-
+\end{lstlisting}
 
 The dependencies for A would be:
-{ Stmt_for_T[i] -> Stmt_for_S[i] : i < n; Stmt_for_T[i] ->
-Copy_in_A[i] : i >= n }
+\[
+\{ Stmt\_for\_T[i] \rightarrow Stmt\_for\_S[i] : i \le n; Stmt\_for\_T[i] \rightarrow Copy\_in\_A[i] : i \ge n \}
+\]
 
-Copy_in_A is currently not part of what DependencyInfo returns. If
-implemented, we'd need to access in T(i):
-
+Copy\_ in\_ A is currently not part of what DependencyInfo returns. If implemented, we need to access it in T(i):
+\begin{lstlisting}[frame=single]
     for (int i = 0; i < n: i+=1)
 S:  Expanded_A_in_S[i] = ...;
 
     for (int i = 0; i < 2*n: i+=1)
 T:   ... = (i < n) ? Expanded_A_in_S[i] : A[i];
+\end{lstlisting}
 
 That is, either the original A[i] for the copy-in, or the expanded one for S.
 
-It can be considered a special case of
-
+It can be considered a special case of :
+\begin{lstlisting}[frame=single]
     for (int i = 0; i < 2*n: i+=1)
 U:  A[i] = ...; /* init all array elements */
 
@@ -86,99 +71,54 @@ S:  A[i] = ...;
 
     for (int i = 0; i < 2*n: i+=1)
 T:   ... = A[i];
+\end{lstlisting}
 
-And the dependencies
-{ Stmt_for_T[i] -> Stmt_for_S[i] : i < n; Stmt_for_T[i] ->
-Stmt_for_U[i] : i >= n }
+And the dependencies :
+\[
+\{ Stmt\_for\_T[i] \rightarrow Stmt\_for\_S[i] : i \le n; Stmt\_for\_T[i] \rightarrow Stmt\_for\_U[i] : i \ge n }
+\]
 
-for which we need support for setNewAccessRelation(isl::union_set).
+for which we need support for setNewAccessRelation(isl::union\_map). \\
 
-It is not possible without because Expanded_A_in_S[i] is expanded
-using S's domain. It doesn't have an element for i>=n.
+It is not possible without because Expanded\_A\_in\_S[i] is expanded using S's domain. It doesn't have an element for $i \ge n$.
 
-In case you think to just allocating 2n elements for Expanded_A_in_S,
-consider more complicated examples:
-
-for (int j = 0; i < m: i+=1)
-    for (int i = 0; i < n: i+=1)
-S:  A[i + j] = ...;
-
-for (int i = m+n-1; i < m+n: i+=1)
-T:   ... = A[i];
-
-
-In here, Expanded_A_in_S[] would have to dimensions, but A[] has just
-one. We cannot "pre-fill" with Expanded_A_in_S[] with values from A[]
- because in order to know which element Expanded_A_in_S[i,j] to store
-them to, we'd need the dependencies from S(i,j) of which, by
-definition of copy-in, there's none.
-
-T has two instances: T(m+n-2) and T(m+n-1)
-The element read by T(m+n-2) is Expanded_A_in_S[m-1,n-1]
-What element of Expanded_A_in_S[i,j] would T(m+n-1) read?
-
-
-4. Copy-out of llvm::instruction
-
-There's exactly one definition of llvm::instruction that is visible
-after the SCoP. DependenceInfo currently doesn't determine which one,
-but it is possible using isl_union_flow_get_{must/may}_no_source.
-
-Ether at the end of the SCoP this element is loaded from the expanded
-array and used in place of the llvm::instruction's value
-Or when that statement instance is execution, we take the result of
-the llvm::instruction and store it to the value's alloca (some pointer
-with .s2a suffix created by BlockGenerator)
-
-
-5. Copy-out of PHINode
-
-Example:
-
+\section{Copy-out of PHINode}
+Same as before, let take an example :
+\begin{lstlisting}[frame=single]
 scop_exiting:
   br i1 %exit_cond, label %scop_exit, label %stay_in_scop
 
 scop_exit:
   %phi = double [%val, %scop_exiting] /* this is outside the SCoP */
+\end{lstlisting}
 
-Note that %scop_exiting will have a WRITE MemoryAccess of
-MemoryKind::ExitPHI. It is written multiple times, but only the last
-is actually used.
-Using isl_union_flow_get_{must/may}_no_source you could again find out
-which one is the last one, and only write that one.
+\%scop\_exiting will have a WRITE MemoryAccess of MemoryKind::ExitPHI. It is written multiple times, but only the last is actually used. Using $isl\_union\_flow\_get\_{must/may}\_no\_source$ it is possible to find out which one is the last one, and only write that one.
 
-%phi is outisde the scop, therefore there is no domain that could be
-used to expand it.
+\%phi is outisde the scop, therefore there is no domain that could be used to expand it.
 
 
-6. Copy-out of arrays.
+\section{Copy-out of arrays}
 
-Again isl_union_flow_get_{must/may}_no_source can be used to determine
-which statement instance has written the last value before leaving the
-SCoP.  That element must be written the the array.
+Again $isl\_union\_flow\_get\_{must/may}\_no\_source$ can be used to determine which statement instance has written the last value before leaving the SCoP. That element must be written the the array.
 
-Example:
-
+\begin{lstlisting}[frame=single]
 for (int j = 0; j < m; i+=1)
   for (int i = 0; i < n; i+=1)
     A[i+j] = S(j,i);
+\end{lstlisting}
 
+What's visible in A[k] after the SCoP execution? After the execution of the SCOP, A[k] contains (k>=m) ? S(m-1,k-m-1): S(k,0).
 
-What's visible in A[k] after the SCoP execution?
-A[k] = (k>=m) ? S(m-1,k-m-1): S(k,0); /* index might not be correct,
-just an example */
-
-That is, we create a copy-out statement
-
+Now we have two solutions to create copy-out statements.
+\begin{itemize}
+\item Create statements at the end of the SCOP.
+\begin{lstlisting}[frame=single]
 for (k = 0; k < n+m+1; k+=1)
   A[k] = Expanded_A_for_S[(k>=m) ? m-1 : k,(k>=m) ? k-m-1 : 0];
+\end{lstlisting}
 
-To create such entirely new statement, see the implementation of
-CopyStmt in Polly's source code.
-
-Alternatively, we modify the statement S such that it writes to A[k]
-at the condition given:
-
+\item When doing the expansion, insert partiel write that write to the original array, if needed.
+\begin{lstlisting}[frame=single]
 /* normal expansion without copy-out */
 for (int j = 0; j < m; i+=1)
   for (int i = 0; i < n; i+=1)
@@ -187,8 +127,13 @@ for (int j = 0; j < m; i+=1)
 /* with copy-out */
 for (int j = 0; j < m; i+=1)
   for (int i = 0; i < n; i+=1) {
-    double val = S(j,i); /* llvm::instruction result of whatever S(i,j) is */
+    double val = S(j,i); 
     Expanded_A_for_S[i,k] = val;
-    if (i == 0 || j == m -1) /* can be implemented  using a partial write */
-       A[(j == m-1) ? i + m-1 : j] = val; /* index might be incorrect*/
-}
+    if (i == 0 || j == m -1) 
+       A[(j == m-1) ? i + m-1 : j] = val; 
+ }
+\end{lstlisting}
+\end{itemize}
+
+
+
