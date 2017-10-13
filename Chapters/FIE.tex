@@ -66,7 +66,7 @@ The first 3 lines is a way to get RAW dependencies from the DependenceInfo pass.
 Then, we iterate over the ScopArrayInfo of the SCoP and try to expand this ScopArrayInfo.
 \begin{itemize}
 \item If the SAI is not expandable, we continue.
-\item If the SAI is expandable, we expand the Write access and then we map the read accesses according to the algorithm detailed in this section.\todo{lien}
+\item If the SAI is expandable, we expand the Write access and then we map the read accesses according to the algorithm detailed in Section~\ref{ch:MSE}.
 \item If the access is a PHI access,  we expand the access with the same principle as before but the role of write and read are exchange.
 \end{itemize}
 

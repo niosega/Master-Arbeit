@@ -33,9 +33,9 @@ On the implementation side, special care had to be taken to get the memory alloc
 \label{fig:HeapAllocPlace}
 \end{figure}
 
-As an incremental step, this could be tested via the JSON Importer. We concluded to this solution after long discussion with the Polly community to ensure that we do not risk a use after free error with the newly added arrays. Even if the SCoP is inside a loop, every allocated arrays we'll be freed. This solution is simple to implement but need a mechanism of copy-in/out. This problem will be discussed in a future section\todo{faire le lien}.
+As an incremental step, this could be tested via the JSON Importer. We concluded to this solution after long discussion with the Polly community to ensure that we do not risk a use after free error with the newly added arrays. Even if the SCoP is inside a loop, every allocated arrays we'll be freed. This solution is simple to implement but need a mechanism of copy-in/out. This problem will be discussed in Section~\ref{ch:CopyInOut}}.
 
-Technically speaking, to insert malloc and free calls, we used the method described in section\todo{add the link}. Here is a simplified version of the code actually in place :
+Technically speaking, to insert malloc and free calls, we used the method described in Section~\ref{ch:LLVM}. Here is a simplified version of the code actually in place :
 \begin{lstlisting}[frame=single]
 // Get the IntPtrTy from the Datalayout
 auto IntPtrTy = DL.getIntPtrType(Ctx);
