@@ -1,3 +1,11 @@
 %************************************************
 \chapter{Implementation of Maximal Static Expansion}\label{ch:MSEImp}
 %************************************************
+
+For now, only a mechanism of \ac{FIE} is implemented and some problems already occured due to the non-optimality of this expansion :
+\begin{itemize}
+\item Some benchmarks fail because of the amount of memory space needed.
+\item Some acceses can not be expanded because \ac{FIE} need sometime an union map as access relation.
+\end{itemize}
+
+These two problems will be solve as soon as \ac{MSE} is implemented. The details for implementation can be found in the article describing \ac{MSE}\cite{MSE}. It involves integer set computation, but the architecture is in place. Only the mathematical part of the \ac{MSE} is missing.

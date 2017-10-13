@@ -33,7 +33,7 @@ The accesses to tmp are now made to/from a different location for each iteration
 We will present in the next sections two differents methods to expand memory access : Fully-Indexed and Maximal Static expansion.
 
 \section{Fully-Indexed Expansion}
-The principle of fully-index expansion is that each write goes to a different memory location. This expansion is the maximum one in term of memory needed. Depending on the characteristics of the code expanded, it could be the fast expansion or the worst but never the best one in terms of memory consumption.
+The principle of \ac{FIE} is that each write goes to a different memory location. This expansion is the maximum one in term of memory needed. Depending on the characteristics of the code expanded, it could be the fast expansion or the worst but never the best one in terms of memory consumption.
 
 The mechanisms to fully expand the memory accesses is to expand the write access according to the loop inductions variables and map the read access to the newly expanded arrays. Let see that on an example :
 
@@ -82,3 +82,68 @@ T:  A[i] = B_exp[i][i];
 
 
 \section{Maximal Static Expansion}
+\ac{FIE} is efficient to remove dependencies but inefficient in term of memory consumption. Moreover, \ac{FIE} can require a $\phi$-function to disambiguate some accesses. A $\phi$-function is a function that say, according to run-time information, where to read/write. Let take a small example to illustrate :
+
+\begin{lstlisting}[frame=single]
+for (int i = 0; i < N; i++) {
+S:  tmp = 1
+    if( i%2 ) {
+T:     tmp = 0;
+    }
+U:  ... = tmp
+}
+\end{lstlisting}
+
+Depending on the iteration we are in, the statement U can read the value of tmp from the location of tmp written by S or T. In our case, the $\phi$-function is :
+
+\[ \phi(U) = \begin{cases} 
+      S & \text{if $i\%2$} \\
+      T & \text{if not $i\%2$}
+   \end{cases}
+\]
+
+The use of $\phi$-function create a need of test at run time to decide where to read/write and thus create an overhead in term of execution time. The goal of maximal expansion is to have a tradeof between parallelism and memory consumption while not having the need of a $\phi$-function. 
+
+We will not discuss about how to implement \ac{MSE} as soon as, due to time constraint, I was not able to implement it. But details can be found in the article\cite{MSE}. But let take an example to illustrate the difference between \ac{FIE} and \ac{MSE}. Parts with point have no impact on the value of tmp.
+
+\begin{lstlisting}[frame=single]
+for (int i = 0; i < N; i++) {
+S:  tmp = ...
+    while( c ) {
+T:      tmp = tmp + ...
+    }
+U:  ... = tmp;
+}
+\end{lstlisting}
+
+The statement U reads the value of tmp but the source is only known at run time, depending on the condition of the while loop. If we fully expand this code, we will have :
+
+\begin{lstlisting}[frame=single]
+for (int i = 0; i < N; i++) {
+    tmp1[i] = ...
+    int j = 0;
+    while( c ) {
+        if (j == 0)
+          tmp2[i][j] = tmp1[i] + ...
+        else
+          tmp2[i][j] = tmp2[i][j-1]
+        j++
+    }
+    if (j ==0)
+      ... = tmp1[i]
+    else
+      ... = tmp3[i][j]
+}
+\end{lstlisting}
+We can see that there are two run-time conditions that will slow down the execution and maybe avoid parallelization. If we found the maximum expansion that can be done without needing a $\phi$-function, we have this code :
+
+\begin{lstlisting}[frame=single]
+for (int i = 0; i < N; i++) {
+S:  tmp[i] = ...
+    while( c ) {
+T:      tmp[i] = tmp[i] + ...
+    }
+U:  ... = tmp[i];
+}
+\end{lstlisting}
+This expansion is obviously not the best one in term of unicity of write location because the inner loop access the same element. But, we cannot do better without having a $\phi$-function. It is  possible to run in parallel each iteration of the outermost loop.
