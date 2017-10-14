@@ -3,7 +3,7 @@
 %************************************************
 
 \section{Motivations}
-Data-dependences in a program can lead to a very bad automatic parallelization. Modern compilers use techniques to reduce the number of such dependences. One of them is \ac{MSE}. The \ac{MSE} is a transformation which expand the memory access to and from Array or Scalar. The goal is to disambiguate memory accesses by assigning different memory locations to non-conflicting writes. This method is described in a paper written by Denis Barthou, Albert Cohen and Jean- Francois Collard\cite{MSE}. Let take a example (from the article) to understand the principle :
+Data-dependencies in a program can lead to a very bad automatic parallelization. Modern compilers use techniques to reduce the number of such dependencies. One of them is \ac{MSE}. The \ac{MSE} is a transformation which expands the memory accesses to and from Array or Scalar. The goal is to disambiguate memory accesses by assigning different memory locations to non-conflicting writes. This method is described in a paper written by Denis Barthou, Albert Cohen and Jean- Francois Collard\cite{MSE}. Let take an example (from the article) to understand the principle :
 \begin{lstlisting}[frame=single]
 int tmp;
 for (int i = 0; i < N; i++) {
@@ -28,14 +28,14 @@ for (int i = 0; i < N; i++) {
 }
 \end{lstlisting}
 
-The accesses to tmp are now made to/from a different location for each iteration of the i-loop. It is then possible to execute the different iteration on different computation units (\ac{GPU}, \ac{CPU} …).
+The accesses to tmp are now made to/from a different location for each iteration of the i-loop. It is then possible to execute the different iterations on different computation units (\ac{GPU}, \ac{CPU} …).
 
-We will present in the next sections two differents methods to expand memory access : Fully-Indexed and Maximal Static expansion.
+We will present in the next sections two differents methods to expand memory accesses : Fully-Indexed and Maximal Static expansion.
 
 \section{Fully-Indexed Expansion}
 The principle of \ac{FIE} is that each write goes to a different memory location. This expansion is the maximum one in term of memory needed. Depending on the characteristics of the code expanded, it could be the fast expansion or the worst but never the best one in terms of memory consumption.
 
-The mechanisms to fully expand the memory accesses is to expand the write access according to the loop inductions variables and map the read access to the newly expanded arrays. Let see that on an example :
+The mechanism to fully expand the memory accesses is to expand the write accesses according to the loop induction variables and map the read accesses to the newly expanded arrays. Let see that on an example :
 
 \begin{lstlisting}[frame=single]
 int tmp;
@@ -59,11 +59,11 @@ This one is already fully expanded. So no need of expansion for the array A.
 \]
 The statement S is inside a two dimensional loop nest and access the array B that is a one-dimension array. So the array B needs expansion. We then create a new 2D array called $B_{exp}$, indexed with the loop induction variables $i$ and $j$.
 
-The write access of B has been modified so it is necessary to remap the read access of B to $B_{exp}$. To get the memory location read by a statement, dependencies analysis is needed. The idea to remap accesses is to analyse \ac{RAW} dependencies between statements. For example, in our code, there is a \ac{RAW} dependency between T and S :
+The write access of B has been modified so it is necessary to remap the read access of B to $B_{exp}$. To get the memory location read by a statement, dependency analysis is needed. The idea to remap accesses is to analyse \ac{RAW} dependencies between statements. For example, in our code, there is a \ac{RAW} dependency between T and S :
 \[
 \{[T[i] \rightarrow B[i]] \rightarrow [S[i,i] \rightarrow B[i,i]]:0<=i<=N\}
 \]
-This \ac{ISL} map means that the statement the read access made during the execution of statement T[i] reads a memory location written by statement S[i][i]. The new read accesses must be :
+This \ac{ISL} map means that the read access made during the execution of statement T[i] reads a memory location written by statement S[i][i]. The new read access must be :
  \[
 \{T[i] \rightarrow B[i][i]:0<=i<=N\}
 \]
@@ -102,7 +102,7 @@ Depending on the iteration we are in, the statement U can read the value of tmp 
    \end{cases}
 \]
 
-The use of $\phi$-function create a need of test at run time to decide where to read/write and thus create an overhead in term of execution time. The goal of maximal expansion is to have a tradeof between parallelism and memory consumption while not having the need of a $\phi$-function. 
+The use of $\phi$-function creates a need of test at run time to decide where to read/write and thus create an overhead in term of execution time. The goal of maximal expansion is to have a tradeof between parallelism and memory consumption while not having the need of a $\phi$-function. 
 
 We will not discuss about how to implement \ac{MSE} as soon as, due to time constraint, I was not able to implement it. But details can be found in the article\cite{MSE}. But let take an example to illustrate the difference between \ac{FIE} and \ac{MSE}. Parts with point have no impact on the value of tmp.
 
