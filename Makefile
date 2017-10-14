@@ -13,7 +13,6 @@ ifeq (git,$(firstword $(MAKECMDGOALS)))
   $(eval $(RUN_ARGS):;@:)
 endif
 
-
 all:
 	pdflatex -synctex=1 -interaction=nonstopmode ClassicThesis.tex
 
