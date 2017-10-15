@@ -94,12 +94,11 @@ scop_exit:
 
 \%scop\_exiting will have a WRITE MemoryAccess of MemoryKind::ExitPHI. It is written multiple times, but only the last is actually used. Using $isl\_union\_flow\_get\_{must/may}\_no\_source$ it is possible to find out which one is the last one, and only write that one.
 
-\%phi is outisde the scop, therefore there is no domain that could be used to expand it.
-
+\%phi is outside the scop, therefore there is no domain that could be used to expand it.
 
 \section{Copy-out of arrays}
 
-Again $isl\_union\_flow\_get\_{must/may}\_no\_source$ can be used to determine which statement instance has written the last value before leaving the SCoP. That element must be written the the array.
+Again $isl\_union\_flow\_get\_{must/may}\_no\_source$ can be used to determine which statement instance has written the last value before leaving the SCoP. That element must be written to the array.
 
 \begin{lstlisting}[frame=single]
 for (int j = 0; j < m; i+=1)
@@ -117,7 +116,7 @@ for (k = 0; k < n+m+1; k+=1)
   A[k] = Expanded_A_for_S[(k>=m) ? m-1 : k,(k>=m) ? k-m-1 : 0];
 \end{lstlisting}
 
-\item When doing the expansion, insert partiel write that write to the original array, if needed.
+\item When doing the expansion, insert partial write that write to the original array, if needed.
 \begin{lstlisting}[frame=single]
 /* normal expansion without copy-out */
 for (int j = 0; j < m; i+=1)

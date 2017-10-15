@@ -4,7 +4,7 @@
 
 \ac{ISL}\cite{ISL}, is a C library handling sets and relations of integer points bounded by affine constraints. Sets and maps can be described with numerical values as well as with parameter values. The computations are done in exact integer arithmetic. 
 
-There are multiple data structure inside ISL. Here is a quick overview of concepts needed to understand the next parts of this report. 
+There are multiple data structures inside ISL. Here is a quick overview of concepts needed to understand the next parts of this report. 
 
 \section{Set}
 A set in ISL is represented as follow :
@@ -13,7 +13,7 @@ A set in ISL is represented as follow :
 \]
 Where $i_k$ is an input variable and $c_k$ is a constraint.
 
-For example, the set of all instances of the statement S of the following code source is $\{S[i,j]:i=j,0<=i<=N,0<=j<=N\}$.
+For example, the set of all instances of the statement S of the following source code is $\{S[i,j]:i=j,0<=i<=N,0<=j<=N\}$.
 \begin{lstlisting}[frame=single]
 for (int i = 0; i < N; i++)
   for (int j = 0; j < N; j++)

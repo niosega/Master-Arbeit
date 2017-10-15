@@ -4,14 +4,14 @@
 
 Our evaluation considers, for simplicity, only Polybench\cite{Polybench} right now. The benchmark suite contains small isolated examples that can directly make use of static expansion to eliminate false dependencies as much as possible (Obviously, this uncovered a few bugs that need to be ironed out as well).
 
-For the evaluation of this project, we have generated a set of patches that add compile-stime statistics. These patches are not yet integrated into Polly as of now, but will be added shortly. These statistics enable us to count the number of accesses we were able to expand and would have been able to expand, if Copy-In/-Out is available. Furthermore, we track the amount of memory that is required in both situations. This gives as a nice estimate about the impact on the memory footprint, if we enable static expansion. This could also be used to implement a threshold for static expansion. A user might then specifiy an upper-bound on the memory-usage per SCoP to control the static expansion (not implemented).
+For the evaluation of this project, we have generated a set of patches that add compile-time statistics. These patches are not yet integrated into Polly as of now, but will be added shortly. These statistics enable us to count the number of accesses we were able to expand and would have been able to expand, if Copy-In/-Out is available. Furthermore, we track the amount of memory that is required in both situations. This gives as a nice estimate about the impact on the memory footprint, if we enable static expansion. This could also be used to implement a threshold for static expansion. A user might then specifiy an upper-bound on the memory-usage per SCoP to control the static expansion (not implemented).
 
 The following charts are generated using \footurl{http://pygal.org/en/stable/}{Pygal} and \footurl{https://altair-viz.github.io/}{Altair}, two Python libraries to generate charts. Polybench comes with 30 benchmarks. Out of those 30, we are able to compile 22 successfully. Eight crash during compilation, we are investigating the reason for this. For the compile-time comparison we refer to the polybench’s EXTRALARGE\_ DATASET. For our run-time evaluation we had to use the biggest dataset that fit into the main-memory of the test-machine (a laptop with an Intel i7-2600 working at 3.40GHz and 32Go of RAM). This would be LARGE\_ DATASET for most benchmarks and MEDIUM\_ DATASET for a few selected ones. Evaluation were run using the Benchbuild suite\cite{Benchbuild}.
 
 \section{What if copy-in/out would have been available ?}
 The idea is to know, for all users of the ScopArrayInfo, if the user is inside or outside the loop in which the write (for MemoryKind::Array and MemoryKind::Value) or the read (for MemoryKind::PHI) happened.
 
-To proove the necessity of copy-in/out implementation, we compare the number of expandable memory accesses than are expanded now and the one that would be expandable if we would have copy-in/out.
+To proove the necessity of copy-in/out implementation, we compare the number of expandable memory accesses that are expanded now and the one that would be expandable if we would have copy-in/out.
 
 \begin{figure}
 \centering
@@ -23,7 +23,7 @@ To proove the necessity of copy-in/out implementation, we compare the number of 
 We clearly see with Figure~\ref{fig:Numbers} that, if the copy-in/out would have been implemented, way more memory accesses would have been expanded. But expanding more memory accesses can lead to memory space problems. Let us look at the impact of static expansion on the memory needed to store the expanded arrays.
 
 \section{Memory usage}
-Obviously, static expansion can increase the memory usage quite a lot. What sounds bad at first, is actually a success for us. Because an increase in memory usage shows that we actually expanded acceesses. At the same time we trade this memory for the elimination of dependencies, which in turn enables parallelization. Again, for both Copy-In/-Out available and not available we compare the memory usage for the expansion. Results are shown in Figure~\ref{fig:MemorySpace}.
+Obviously, static expansion can increase the memory usage quite a lot. What sounds bad at first, is actually a success for us. Because an increase in memory usage shows that we actually expanded accesses. At the same time we trade this memory for the elimination of dependencies, which in turn enables parallelization. Again, for both Copy-In/-Out available and not available we compare the memory usage for the expansion. Results are shown in Figure~\ref{fig:MemorySpace}.
 
 \begin{figure}
 \centering

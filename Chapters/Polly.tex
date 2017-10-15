@@ -3,7 +3,7 @@
 %************************************************
 
 \section{Architecture}
-Polly is a loop and data-locality optimizer for LLVM\cite{Polly}. The optimisations are made using a mathematical model called the polyhedral model. A key aspect of the model is the ability to reason about the memory access behavior in a very fine-granular way. This enables us to express very fine-granular way in a mathematical domain, where we deal with polyhedra instead of LLVM instructions. After modeling, transformations (tilling, loop fusion, loop unrolling …) can be applied on the model to improve data-locality and/or parallelization.
+Polly is a loop and data-locality optimizer for LLVM\cite{Polly}. The optimisations are made using a mathematical model called the polyhedral model. A key aspect of the model is the ability to reason about the memory accesses behavior in a very fine-granular way. This enables us to express very fine-granular way in a mathematical domain, where we deal with polyhedra instead of LLVM instructions. After modeling, transformations (tilling, loop fusion, loop unrolling …) can be applied on the model to improve data-locality and/or parallelization.
 
 To do this, polly acts in three steps. First, it detects interesting code and translates it into a polyhedral representation. Then, it does some analysis and transformations passes that operate on the LLVM-IR. Finally, it generates code for the desired target. These three steps are called front-end, middle part and back-end passes. This pipeline is described in Figure~\ref{fig:Architecture}.
 
@@ -14,7 +14,7 @@ To do this, polly acts in three steps. First, it detects interesting code and tr
 \label{fig:PollyArchitecture}
 \end{figure}
 
-In the front-end passes, Polly detects which part of the code will be optimised. Those part are called \ac{SCOP}. Then Polly transforms those SCoPs into a polyhedral representation. 
+In the front-end passes, Polly detects which part of the code will be optimised. Those parts are called \ac{SCOP}. Then Polly transforms those SCoPs into a polyhedral representation. 
 
 The middle part is the place where analysis (dependencies analysis) and transformations (Maximal static expansion for instance) are made. It is also possible to export and import representations to perform manual optimisations.
 
@@ -25,7 +25,7 @@ There are two ways to enable polly. It is possible to enable Polly directly from
 \section{Profitable code and SCop}
 Polly operates on a low level representation of the code called LLVM-IR. This language has been designed to perform low-level optimisations. To focus on important high-level optimisation problems, it is important to have a more abstract representation. In this section, we will discuss about the polyhedral representation used by Polly and a definition of what kind of code can be translated to this representation.
 
-Polyhedral optimisers work on Static Control Parts (SCoP) of a function. A Static Control Parts is a part of code in which all control flow and memory accesses are known at compile time. This means that it is possible to run precise and detailled analysis during compilation. Some optimisers also work with non-statically known control flow, some use a \ac{JIT} mechanism, but Polly only focus on statically known control flow. An extension to Polly, called PolyJit\cite{PolyJit}, is able to operates at run-time.
+Polyhedral optimisers work on Static Control Parts (SCoP) of a function. A Static Control Parts is a part of code in which all control flow and memory accesses are known at compile time. This means that it is possible to run precise and detailled analysis during compilation. Some optimisers also work with non-statically known control flow, some use a \ac{JIT} mechanism, but Polly only focus on statically known control flow. An extension to Polly, called PolyJit\cite{PolyJit}, is able to operate at run-time.
 
 \begin{definition}{}
 A SCoP is a part of a code in which :
@@ -48,7 +48,7 @@ Polly, by default, does not optimise all SCoPs. It select profitable one with a 
 
 It is possible to force Polly to optimise every SCoP with the option $-polly-process-unprofitable$. This approach is very simple and not efficient. During my thesis, one of my colleague has worked on a different approach to select profitable SCoP based on Profiled Guided Optimisation (PGO)\cite{PGO}.
 
-After Scop transformations, Polly create a divergence at the place where the SCoP was. One branch is the old code, one other is the optimised version. Some tests, at runtime, are performed to choose the right code to be optimised. For instance, Polly is not able to handle pointers that overlapsed, but the detection can only be made at run-time. For a more visual understanding, see Figure~\ref{fig:ScopSplit}.
+After Scop transformations, Polly creates a divergence at the place where the SCoP was. One branch is the old code, one other is the optimised version. Some tests, at runtime, are performed to choose the right code to be executed. For instance, Polly is not able to handle pointers that overlapsed, but the detection can only be made at run-time. For a more visual understanding, see Figure~\ref{fig:ScopSplit}.
 \begin{figure}
 \centering
 \includegraphics[scale=0.3]{gfx/Polly/ScopSplit.png}
